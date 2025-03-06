@@ -50,7 +50,12 @@ public class JWTUtils {
      *
      * @param token 传入token
      */
-    public static void verifyToken(String token) {
+    public static void verifyToken(String token) throws Exception {
+        DecodedJWT tokenInfo = getTokenInfo(token);
+        String type = tokenInfo.getClaim("type").asString();
+        if ("refreshToken".equals(type)) {
+            throw new Exception("请使用正确的token");
+        }
         JWT.require(Algorithm.HMAC256(SING)).build().verify(token);
     }
 
@@ -74,6 +79,7 @@ public class JWTUtils {
         DecodedJWT tokenInfo = getTokenInfo(token);
         Map<String, String> payload = new HashMap<>();
         payload.put("id", tokenInfo.getClaim("id").asString());
+        payload.put("type", "token");
         return generalToken(payload);
     }
 
@@ -87,6 +93,7 @@ public class JWTUtils {
         DecodedJWT tokenInfo = getTokenInfo(refreshToken);
         Map<String, String> payload = new HashMap<>();
         payload.put("id", tokenInfo.getClaim("id").asString());
+        payload.put("type", "refreshToken");
         return generaRefreshToken(payload);
     }
 }

@@ -36,6 +36,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         HashMap<String, String> payload = new HashMap<>();
         payload.put("id", user.getId().toString());
+        payload.put("type", "refreshToken");
         String refreshToken = JWTUtils.generaRefreshToken(payload);
         user.setRefreshToken(refreshToken);
         int update = userMapper.updateById(user);
@@ -83,6 +84,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryUser = userMapper.selectOne(queryWrapper);
         HashMap<String, String> payload = new HashMap<>();
         payload.put("id", queryUser.getId().toString());
+        payload.put("type", "refreshToken");
         queryUser.setRefreshToken(JWTUtils.generaRefreshToken(payload));
         queryUser.setPassword(DigestUtils.md5DigestAsHex(user.getPassword().getBytes()));
 

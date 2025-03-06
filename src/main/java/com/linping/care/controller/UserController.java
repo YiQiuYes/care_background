@@ -12,19 +12,16 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Tag(name = "用户控制类")
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-@Tag(name = "用户控制类")
 public class UserController {
     private final UserService userService;
 
@@ -40,7 +37,6 @@ public class UserController {
 
         // 生成token
         String token = JWTUtils.reNewToken(user.getRefreshToken());
-        log.info("用户登录生成的token：[{}]", token);
         HashMap<String, Object> data = new HashMap<>();
         data.put("token", token);
         data.put("refreshToken", user.getRefreshToken());
@@ -48,12 +44,11 @@ public class UserController {
     }
 
     @GetMapping("/user/refreshToken")
-    @Operation(summary = "刷新token")
+    @Operation(summary = "刷新refreshToken")
     @Parameters({
             @Parameter(name = "refreshToken", description = "刷新令牌", required = true)
     })
-    public ResultData<HashMap<String, Object>> refreshToken(String refreshToken) {
-        System.out.println(refreshToken);
+    public ResultData<HashMap<String, Object>> refreshToken(@RequestParam("refreshToken") String refreshToken) {
         try {
             String newRefreshToken = userService.refreshToken(refreshToken);
             HashMap<String, Object> data = new HashMap<>();
