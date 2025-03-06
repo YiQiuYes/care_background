@@ -34,3 +34,6 @@ build/
 
 ### logs ###
 /log4j2-logs/
+
+### images ###
+/images/
