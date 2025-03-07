@@ -7,25 +7,32 @@ import com.linping.care.entity.News;
 import com.linping.care.mapper.NewsMapper;
 import com.linping.care.service.NewsService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements NewsService {
     private final NewsMapper newsMapper;
 
     @Override
-    public ArrayList<Object> getNewsList(String type, int pageNow, int pageSize) {
+    public HashMap<String, Object> getNewsList(String type, int pageNow, int pageSize) {
         // SELECT * FROM news limit #{pageNow},#{pageSize}
         QueryWrapper<News> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("type", type);
         queryWrapper.orderByDesc("create_time");
 
-        Page<News> page = new Page<>(pageNow - 1, pageSize);
+        HashMap<String, Object> result = new HashMap<>();
+        Page<News> page = new Page<>(pageNow, pageSize);
         page = newsMapper.selectPage(page, queryWrapper);
-        return new ArrayList<>(page.getRecords());
+        result.put("pages", page.getPages());
+        result.put("total", page.getTotal());
+        result.put("records", page.getRecords());
+        return result;
     }
 
     @Override

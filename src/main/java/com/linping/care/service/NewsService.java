@@ -4,9 +4,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.linping.care.entity.News;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public interface NewsService extends IService<News> {
-    ArrayList<Object> getNewsList(String type, int pageNow, int pageSize);
+    HashMap<String, Object> getNewsList(String type, int pageNow, int pageSize);
 
     boolean insertNews(News news);
 
