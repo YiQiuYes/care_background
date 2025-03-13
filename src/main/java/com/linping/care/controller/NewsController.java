@@ -1,9 +1,14 @@
 package com.linping.care.controller;
 
-import com.linping.care.entity.News;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.linping.care.entity.NewsEntity;
 import com.linping.care.entity.ResultData;
 import com.linping.care.entity.ReturnCode;
+import com.linping.care.entity.UserEntity;
 import com.linping.care.service.NewsService;
+import com.linping.care.service.UserService;
+import com.linping.care.utils.JWTUtil;
+import com.linping.care.utils.NewsUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -15,16 +20,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.UUID;
 
 @Tag(name = "新闻控制类")
 @RestController
@@ -39,21 +39,26 @@ public class NewsController {
     @Value("${pictureFile.path-mapping}")
     private String picturePath_mapping;
 
+    @Value("${pictureFile.news-path}")
+    private String newsPath;
+
     @Value("${server.port}")
     private int ip_port;
 
     private final NewsService newsService;
 
+    private final UserService userService;
+
     @Operation(summary = "获取新闻列表")
     @Parameters({
-            @Parameter(name = "type", description = "新闻类型", required = true, schema = @Schema(allowableValues = {"new", "notice", "policy"})),
+            @Parameter(name = "type", description = "新闻类型", required = true, schema = @Schema(allowableValues = {"new", "notice", "policy", "all"})),
             @Parameter(name = "pageNow", description = "当前页码", required = true),
             @Parameter(name = "pageSize", description = "每页条数", required = true)
     })
     @GetMapping("/news/list")
     public ResultData<Object> newsList(@RequestParam("type") String type,
-                                                  @RequestParam(value = "pageNow", defaultValue = "1") int pageNow,
-                                                  @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
+                                       @RequestParam(value = "pageNow", defaultValue = "1") int pageNow,
+                                       @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
         if (pageNow <= 0 || pageSize <= 0) {
             return ResultData.fail(400, "页码或页数错误");
         }
@@ -73,48 +78,36 @@ public class NewsController {
                                          @Schema(name = "content", description = "内容") @RequestParam("content") String content,
                                          @Schema(name = "source", description = "来源") @RequestParam("source") String source,
                                          @Schema(name = "type", description = "类型", allowableValues = {"new", "notice", "policy"}) @RequestParam("type") String type,
-                                         @Schema(name = "createTime", description = "创建时间") @RequestParam("createTime") long createTime,
+                                         @Schema(name = "createTime", description = "创建时间") @RequestParam("createTime") Long createTime,
+                                         @RequestHeader("token") String token,
                                          @RequestPart MultipartFile file) {
         // 校验参数是否为空
-        if (title == null || content == null || source == null || type == null || file == null) {
+        if (!NewsUtil.newsCheck(title, content, source, type, createTime)) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
         }
 
+        DecodedJWT tokenInfo = JWTUtil.getTokenInfo(token);
+        String id = tokenInfo.getClaim("id").asString();
+
         // 插入新闻
         try {
-            News news = new News();
-            news.setTitle(title);
-            news.setContent(content);
+            UserEntity userEntity = userService.getById(id);
 
-            String fileName = file.getOriginalFilename();  // 文件名
-            String suffixName;  // 后缀名
-            if (fileName != null) {
-                suffixName = fileName.substring(fileName.lastIndexOf("."));
-            } else {
-                return ResultData.fail(ReturnCode.RC500.getCode(), "文件后缀名错误");
+            if (userEntity.getAuth() <= 1) {
+                return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
             }
-            fileName = "news-" + UUID.randomUUID() + suffixName; // 新文件名
-            File dest = new File(currentPath + picturePath + fileName);
-            if (!dest.getParentFile().exists()) {
-                boolean mkdir = dest.getParentFile().mkdirs();
-                if (!mkdir) {
-                    return ResultData.fail(ReturnCode.RC500.getCode(), "创建文件夹失败");
-                }
-            }
-            try {
-                file.transferTo(dest);
-            } catch (IOException e) {
-                return ResultData.fail(ReturnCode.RC500.getCode(), "文件上传失败");
-            }
-            String ip = InetAddress.getLocalHost().getHostAddress();
-            String final_fileName = "http://" + ip + ":" + ip_port + picturePath_mapping + fileName;
-            news.setImageSrc(final_fileName);
-            news.setSource(source);
-            news.setType(type);
+
+            NewsEntity newsEntity = new NewsEntity();
+            newsEntity.setTitle(title);
+            newsEntity.setContent(content);
+            String final_fileName = NewsUtil.getNewsImageUrl(file, currentPath, picturePath, picturePath_mapping, newsPath, String.valueOf(ip_port));
+            newsEntity.setImageSrc(final_fileName);
+            newsEntity.setSource(source);
+            newsEntity.setType(type);
             LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(createTime), ZoneId.systemDefault());
             Timestamp timestamp = Timestamp.valueOf(localDateTime);
-            news.setCreateTime(timestamp);
-            boolean isInsert = newsService.insertNews(news);
+            newsEntity.setCreateTime(timestamp);
+            boolean isInsert = newsService.insertNews(newsEntity);
             if (isInsert) {
                 return ResultData.success("插入成功");
             } else {
@@ -123,5 +116,79 @@ public class NewsController {
         } catch (Exception e) {
             return ResultData.fail(ReturnCode.RC500.getCode(), e.getMessage());
         }
+    }
+
+    @Operation(summary = "更新新闻")
+    @PostMapping("/news/update")
+    public ResultData<String> newsUpdate(@Schema(name = "id", description = "新闻ID") @RequestParam("id") Integer id,
+                                         @Schema(name = "title", description = "标题") @RequestParam("title") String title,
+                                         @Schema(name = "content", description = "内容") @RequestParam("content") String content,
+                                         @Schema(name = "source", description = "来源") @RequestParam("source") String source,
+                                         @Schema(name = "type", description = "类型", allowableValues = {"new", "notice", "policy"}) @RequestParam("type") String type,
+                                         @Schema(name = "createTime", description = "创建时间") @RequestParam("createTime") Long createTime,
+                                         @RequestHeader("token") String token,
+                                         @RequestPart(required = false) MultipartFile file) {
+        // 校验参数是否为空
+        if (!NewsUtil.newsCheck(id, title, content, source, type, createTime)) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+
+        DecodedJWT tokenInfo = JWTUtil.getTokenInfo(token);
+        String userId = tokenInfo.getClaim("id").asString();
+
+        // 更新新闻
+        try {
+            UserEntity userEntity = userService.getById(userId);
+
+            if (userEntity.getAuth() <= 1) {
+                return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
+            }
+
+            NewsEntity newsEntity = newsService.getById(id);
+            if (newsEntity == null) {
+                return ResultData.fail(ReturnCode.RC500.getCode(), "新闻不存在");
+            }
+            newsEntity.setTitle(title);
+            newsEntity.setContent(content);
+
+            if (file != null) {
+                String final_fileName = NewsUtil.getNewsImageUrl(file, currentPath, picturePath, picturePath_mapping, newsPath, String.valueOf(ip_port));
+                // 删除原图片url
+                boolean isDelete = NewsUtil.deleteImage(newsEntity.getImageSrc(), currentPath, picturePath, newsPath);
+                if (!isDelete) {
+                    NewsUtil.deleteImage(final_fileName, currentPath, picturePath, newsPath);
+                    return ResultData.fail(ReturnCode.RC500.getCode(), "图片删除失败");
+                }
+                newsEntity.setImageSrc(final_fileName);
+            }
+
+            LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(createTime), ZoneId.systemDefault());
+            Timestamp timestamp = Timestamp.valueOf(localDateTime);
+            newsEntity.setCreateTime(timestamp);
+            boolean isUpdate = newsService.updateById(newsEntity);
+            if (isUpdate) {
+                return ResultData.success("更新成功");
+            } else {
+                return ResultData.fail(ReturnCode.RC500.getCode(), "更新失败");
+            }
+        } catch (Exception e) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), e.getMessage());
+        }
+    }
+
+    @Operation(summary = "根据id获取新闻内容")
+    @Parameters({
+            @Parameter(name = "id", description = "新闻ID", required = true)
+    })
+    @GetMapping("/news/getNewById")
+    public ResultData<NewsEntity> getNewById(@RequestParam("id") Integer id) {
+        if (id == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+        NewsEntity newsEntity = newsService.getById(id);
+        if (newsEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "新闻不存在");
+        }
+        return ResultData.success(newsEntity);
     }
 }

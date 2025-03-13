@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class JWTUtils {
+public class JWTUtil {
 
     // 私钥
     private static final String SING = "linping";

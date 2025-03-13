@@ -17,7 +17,7 @@ public class URLConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler(picturePath_mapping + "**")
+        registry.addResourceHandler(picturePath_mapping + "/**")
                 .addResourceLocations("file:" + currentPath + picturePath);
 
     }

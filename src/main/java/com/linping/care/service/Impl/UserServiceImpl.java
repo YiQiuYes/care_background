@@ -3,10 +3,10 @@ package com.linping.care.service.Impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.linping.care.entity.UserEntity;
 import com.linping.care.mapper.UserMapper;
-import com.linping.care.entity.User;
 import com.linping.care.service.UserService;
-import com.linping.care.utils.JWTUtils;
+import com.linping.care.utils.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
@@ -15,43 +15,43 @@ import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, UserEntity> implements UserService {
     private final UserMapper userMapper;
 
     @Override
-    public User login(String phone, String password) {
+    public UserEntity login(String phone, String password) {
         if (phone.isEmpty()) {
             throw new IllegalArgumentException("手机号不能为空");
         } else if (password.isEmpty()) {
             throw new IllegalArgumentException("密码不能为空");
         }
 
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("phone", phone);
 
-        User user = userMapper.selectOne(queryWrapper);
-        if (user == null) {
+        UserEntity userEntity = userMapper.selectOne(queryWrapper);
+        if (userEntity == null) {
             throw new IllegalArgumentException("账号或密码错误");
         }
 
         HashMap<String, String> payload = new HashMap<>();
-        payload.put("id", user.getId().toString());
+        payload.put("id", userEntity.getId().toString());
         payload.put("type", "refreshToken");
-        String refreshToken = JWTUtils.generaRefreshToken(payload);
-        user.setRefreshToken(refreshToken);
-        int update = userMapper.updateById(user);
+        String refreshToken = JWTUtil.generaRefreshToken(payload);
+        userEntity.setRefreshToken(refreshToken);
+        int update = userMapper.updateById(userEntity);
         if (update == 0) {
             throw new IllegalArgumentException("登录失败");
         }
-        user.setPassword("");
-        return user;
+        userEntity.setPassword("");
+        return userEntity;
     }
 
     @Override
     public String refreshToken(String refreshToken) {
-        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        UpdateWrapper<UserEntity> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("refresh_token", refreshToken);
-        String newRefreshToken = JWTUtils.reNewRefreshToken(refreshToken);
+        String newRefreshToken = JWTUtil.reNewRefreshToken(refreshToken);
 
         updateWrapper.set("refresh_token", newRefreshToken);
         int update = userMapper.update(null, updateWrapper);
@@ -62,40 +62,59 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User register(User user) {
-        if (user.getPhone().isEmpty()) {
+    public UserEntity register(UserEntity userEntity) {
+        if (userEntity.getPhone().isEmpty()) {
             throw new IllegalArgumentException("手机号不能为空");
-        } else if (user.getPassword().isEmpty()) {
+        } else if (userEntity.getPassword().isEmpty()) {
             throw new IllegalArgumentException("密码不能为空");
         }
 
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("phone", user.getPhone());
-        User queryUser = userMapper.selectOne(queryWrapper);
-        if (queryUser != null) {
+        QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("phone", userEntity.getPhone());
+        UserEntity queryUserEntity = userMapper.selectOne(queryWrapper);
+        if (queryUserEntity != null) {
             throw new IllegalArgumentException("手机号已存在");
         }
 
-        int insert = userMapper.insert(user);
+        int insert = userMapper.insert(userEntity);
         if (insert == 0) {
             throw new IllegalArgumentException("注册失败");
         }
 
-        queryUser = userMapper.selectOne(queryWrapper);
+        queryUserEntity = userMapper.selectOne(queryWrapper);
         HashMap<String, String> payload = new HashMap<>();
-        payload.put("id", queryUser.getId().toString());
+        payload.put("id", queryUserEntity.getId().toString());
         payload.put("type", "refreshToken");
-        queryUser.setRefreshToken(JWTUtils.generaRefreshToken(payload));
-        queryUser.setPassword(DigestUtils.md5DigestAsHex(user.getPassword().getBytes()));
+        queryUserEntity.setRefreshToken(JWTUtil.generaRefreshToken(payload));
+        queryUserEntity.setPassword(DigestUtils.md5DigestAsHex(userEntity.getPassword().getBytes()));
 
-        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("phone", queryUser.getUsername());
-        int update = userMapper.updateById(queryUser);
+        UpdateWrapper<UserEntity> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("phone", queryUserEntity.getUsername());
+        int update = userMapper.updateById(queryUserEntity);
         if (update == 0) {
             throw new IllegalArgumentException("注册失败");
         }
 
-        queryUser.setPassword("");
-        return queryUser;
+        queryUserEntity.setPassword("");
+        return queryUserEntity;
+    }
+
+    @Override
+    public UserEntity getUserInfo(String token) {
+        String id = JWTUtil.getTokenInfo(token).getClaim("id").asString();
+        if (id == null) {
+            throw new IllegalArgumentException("token无效");
+        }
+
+        QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("id", id);
+        UserEntity userEntity = userMapper.selectOne(queryWrapper);
+        if (userEntity == null) {
+            throw new IllegalArgumentException("用户不存在");
+        }
+        userEntity.setPassword("");
+        userEntity.setRefreshToken("");
+        userEntity.setPhone("");
+        return userEntity;
     }
 }

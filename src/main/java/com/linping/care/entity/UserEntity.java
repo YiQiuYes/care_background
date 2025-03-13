@@ -8,25 +8,25 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
-
 @Data
-@TableName("news")
+@TableName("user")
 @AllArgsConstructor
 @NoArgsConstructor
-public class News {
+public class UserEntity {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
-    @TableField("title")
-    private String title;
-    @TableField("content")
-    private String content;
-    @TableField("image_src")
-    private String imageSrc;
-    @TableField("source")
-    private String source;
-    @TableField("type")
-    private String type;
-    @TableField("create_time")
-    private Timestamp createTime;
+    @TableField("username")
+    private String username;
+    @TableField("password")
+    private String password;
+    @TableField("phone")
+    private String phone;
+    @TableField("refresh_token")
+    private String refreshToken;
+    @TableField("auth")
+    private Integer auth;
+    @TableField("avatar")
+    private String avatar;
+    @TableField("introduction")
+    private String introduction;
 }

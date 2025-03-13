@@ -7,6 +7,10 @@ spring:
   web:
     resources:
       static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,file:${pictureFile.path-mapping}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   # mysql配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -36,5 +40,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 # 图片上传配置
 pictureFile:
-  path: "/images/"
-  path-mapping: "/images/"
+  path: "/images"
+  path-mapping: "/images"
+  news-path: "/news"
+  avatar-path: "/userAvatar"
