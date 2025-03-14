@@ -25,8 +25,8 @@ public class UserEntity {
     private String refreshToken;
     @TableField("auth")
     private Integer auth;
-    @TableField("avatar")
-    private String avatar;
+    @TableField("avatar_image_id")
+    private Integer avatarImageId;
     @TableField("introduction")
     private String introduction;
 }

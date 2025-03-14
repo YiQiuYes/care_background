@@ -43,4 +43,4 @@ pictureFile:
   path: "/images"
   path-mapping: "/images"
   news-path: "/news"
-  avatar-path: "/userAvatar"
+  avatar-path: "/avatar"

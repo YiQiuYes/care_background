@@ -21,7 +21,6 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, NewsEntity> impleme
 
     @Override
     public HashMap<String, Object> getNewsList(String type, int pageNow, int pageSize) {
-        // SELECT * FROM news limit #{pageNow},#{pageSize}
         QueryWrapper<NewsEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.select(NewsEntity.class, i -> !i.getColumn().equals("content"));
         if(!type.equals("all")) {

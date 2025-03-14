@@ -1,10 +1,14 @@
 package com.linping.care.controller;
 
 import com.linping.care.dto.UserDTO;
+import com.linping.care.dto.UserInfoDTO;
+import com.linping.care.entity.ImageEntity;
 import com.linping.care.entity.ResultData;
 import com.linping.care.entity.ReturnCode;
 import com.linping.care.entity.UserEntity;
+import com.linping.care.service.ImageService;
 import com.linping.care.service.UserService;
+import com.linping.care.utils.FileUtil;
 import com.linping.care.utils.JWTUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,10 +17,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.File;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +30,8 @@ import java.util.regex.Pattern;
 @Slf4j
 @RequiredArgsConstructor
 public class UserController {
+    private final String currentPath = System.getProperty("user.dir");
+
     @Value("${pictureFile.path}")
     private String picturePath;
 
@@ -39,6 +45,8 @@ public class UserController {
     private int ip_port;
 
     private final UserService userService;
+
+    private final ImageService imageService;
 
     @PostMapping("/user/login")
     @Operation(summary = "用户登录")
@@ -96,19 +104,28 @@ public class UserController {
         userEntity.setPhone(userDTO.getPhone());
         userEntity.setPassword(userDTO.getPassword());
         userEntity.setAuth(1);
-        String ip = null;
+
+        ImageEntity imageEntity = new ImageEntity();
         try {
-            ip = InetAddress.getLocalHost().getHostAddress();
-        } catch (UnknownHostException e) {
+            ClassPathResource classPathResource = new ClassPathResource("default_avatar.png");
+            File file = classPathResource.getFile();
+            String avatar_src = FileUtil.getImageUrl("avatar", file, currentPath, picturePath, picturePath_mapping, avatarPath, String.valueOf(ip_port));
+            imageEntity.setSrc(avatar_src);
+            boolean save = imageService.save(imageEntity);
+            if (!save) {
+                FileUtil.deleteImage(avatar_src, currentPath, picturePath, avatarPath);
+                return ResultData.fail(ReturnCode.RC500.getCode(), "头像保存失败");
+            }
+            userEntity.setAvatarImageId(imageEntity.getId());
+        } catch (Exception e) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "获取ip失败");
         }
-        String avatar_src = "http://" + ip + ":" + ip_port + picturePath_mapping + avatarPath + "default_avatar.png";
-        userEntity.setAvatar(avatar_src);
-        userEntity.setIntroduction("这个人很懒，什么都没有留下~");
 
+        userEntity.setIntroduction("这个人很懒，什么都没有留下~");
         try {
             userEntity = userService.register(userEntity);
         } catch (Exception e) {
+            FileUtil.deleteImage(imageEntity.getSrc(), currentPath, picturePath, avatarPath);
             return ResultData.fail(ReturnCode.RC500.getCode(), e.getMessage());
         }
 
@@ -122,11 +139,24 @@ public class UserController {
 
     @GetMapping("/user/getUserInfo")
     @Operation(summary = "获取用户信息")
-    public ResultData<UserEntity> getUserInfo(@RequestHeader("token") String token) {
+    public ResultData<UserInfoDTO> getUserInfo(@RequestHeader("token") String token) {
         UserEntity userEntity = userService.getUserInfo(token);
         if (userEntity == null) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "用户不存在");
         }
-        return ResultData.success(userEntity);
+
+        UserInfoDTO userInfoDTO = new UserInfoDTO();
+        userInfoDTO.setId(userEntity.getId());
+        userInfoDTO.setUsername(userEntity.getUsername());
+        userInfoDTO.setIntroduction(userEntity.getIntroduction());
+        userInfoDTO.setAuth(userEntity.getAuth());
+
+        ImageEntity imageEntity = imageService.getById(userEntity.getAvatarImageId());
+        if (imageEntity != null) {
+            userInfoDTO.setAvatar(imageEntity.getSrc());
+        } else {
+           return ResultData.fail(ReturnCode.RC500.getCode(), "头像不存在");
+        }
+        return ResultData.success(userInfoDTO);
     }
 }
