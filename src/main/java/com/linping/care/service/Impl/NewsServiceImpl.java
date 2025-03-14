@@ -2,7 +2,10 @@ package com.linping.care.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.yulichang.base.MPJBaseServiceImpl;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import com.linping.care.dto.NewsDTO;
+import com.linping.care.entity.ImageEntity;
 import com.linping.care.entity.NewsEntity;
 import com.linping.care.mapper.NewsMapper;
 import com.linping.care.service.NewsService;
@@ -16,22 +19,24 @@ import java.util.HashMap;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NewsServiceImpl extends ServiceImpl<NewsMapper, NewsEntity> implements NewsService {
+public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, NewsEntity> implements NewsService {
     private final NewsMapper newsMapper;
 
     @Override
     public HashMap<String, Object> getNewsList(String type, int pageNow, int pageSize) {
-        QueryWrapper<NewsEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select(NewsEntity.class, i -> !i.getColumn().equals("content"));
+        MPJLambdaWrapper<NewsEntity> queryWrapper = new MPJLambdaWrapper<>();
+        queryWrapper.selectFilter(NewsEntity.class, i -> !i.getColumn().equals("content"));
+        queryWrapper.selectAs(ImageEntity::getSrc, NewsDTO::getImageSrc);
         if(!type.equals("all")) {
             queryWrapper.eq("type", type);
         }
 
         queryWrapper.orderByDesc("create_time");
+        queryWrapper.leftJoin(ImageEntity.class, ImageEntity::getNewsId, NewsEntity::getId);
 
         HashMap<String, Object> result = new HashMap<>();
-        Page<NewsEntity> page = new Page<>(pageNow, pageSize);
-        page = newsMapper.selectPage(page, queryWrapper);
+        Page<NewsDTO> page = new Page<>(pageNow, pageSize);
+        page = newsMapper.selectJoinPage(page, NewsDTO.class, queryWrapper);
         result.put("pages", page.getPages());
         result.put("total", page.getTotal());
         result.put("records", page.getRecords());
@@ -53,5 +58,16 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, NewsEntity> impleme
         ArrayList<NewsEntity> newsEntityList = (ArrayList<NewsEntity>) newsMapper.selectList(queryWrapper);
 
         return new ArrayList<>(newsEntityList);
+    }
+
+    @Override
+    public NewsDTO getNewsDetailById(Integer id) {
+        MPJLambdaWrapper<NewsEntity> queryWrapper = new MPJLambdaWrapper<>();
+        queryWrapper.selectAll(NewsEntity.class);
+        queryWrapper.selectAs(ImageEntity::getSrc, NewsDTO::getImageSrc);
+        queryWrapper.leftJoin(ImageEntity.class, ImageEntity::getNewsId, NewsEntity::getId);
+        queryWrapper.eq(NewsEntity::getId, id);
+
+        return newsMapper.selectJoinOne(NewsDTO.class, queryWrapper);
     }
 }

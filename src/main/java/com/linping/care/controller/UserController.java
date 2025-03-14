@@ -104,6 +104,13 @@ public class UserController {
         userEntity.setPhone(userDTO.getPhone());
         userEntity.setPassword(userDTO.getPassword());
         userEntity.setAuth(1);
+        userEntity.setIntroduction("这个人很懒，什么都没有留下~");
+
+        try {
+            userEntity = userService.register(userEntity);
+        } catch (Exception e) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), e.getMessage());
+        }
 
         ImageEntity imageEntity = new ImageEntity();
         try {
@@ -111,21 +118,13 @@ public class UserController {
             File file = classPathResource.getFile();
             String avatar_src = FileUtil.getImageUrl("avatar", file, currentPath, picturePath, picturePath_mapping, avatarPath, String.valueOf(ip_port));
             imageEntity.setSrc(avatar_src);
+            imageEntity.setUserId(userEntity.getId());
             boolean save = imageService.save(imageEntity);
             if (!save) {
                 FileUtil.deleteImage(avatar_src, currentPath, picturePath, avatarPath);
                 return ResultData.fail(ReturnCode.RC500.getCode(), "头像保存失败");
             }
-            userEntity.setAvatarImageId(imageEntity.getId());
         } catch (Exception e) {
-            return ResultData.fail(ReturnCode.RC500.getCode(), "获取ip失败");
-        }
-
-        userEntity.setIntroduction("这个人很懒，什么都没有留下~");
-        try {
-            userEntity = userService.register(userEntity);
-        } catch (Exception e) {
-            FileUtil.deleteImage(imageEntity.getSrc(), currentPath, picturePath, avatarPath);
             return ResultData.fail(ReturnCode.RC500.getCode(), e.getMessage());
         }
 
@@ -140,23 +139,11 @@ public class UserController {
     @GetMapping("/user/getUserInfo")
     @Operation(summary = "获取用户信息")
     public ResultData<UserInfoDTO> getUserInfo(@RequestHeader("token") String token) {
-        UserEntity userEntity = userService.getUserInfo(token);
-        if (userEntity == null) {
+        UserInfoDTO userInfoDTO = userService.getUserInfo(token);
+        if (userInfoDTO == null) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "用户不存在");
         }
 
-        UserInfoDTO userInfoDTO = new UserInfoDTO();
-        userInfoDTO.setId(userEntity.getId());
-        userInfoDTO.setUsername(userEntity.getUsername());
-        userInfoDTO.setIntroduction(userEntity.getIntroduction());
-        userInfoDTO.setAuth(userEntity.getAuth());
-
-        ImageEntity imageEntity = imageService.getById(userEntity.getAvatarImageId());
-        if (imageEntity != null) {
-            userInfoDTO.setAvatar(imageEntity.getSrc());
-        } else {
-           return ResultData.fail(ReturnCode.RC500.getCode(), "头像不存在");
-        }
         return ResultData.success(userInfoDTO);
     }
 }

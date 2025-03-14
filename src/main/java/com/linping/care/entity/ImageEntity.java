@@ -17,4 +17,8 @@ public class ImageEntity {
     private Integer id;
     @TableField(value = "src")
     private String src;
+    @TableField(value = "news_id")
+    private Integer newsId;
+    @TableField(value = "user_id")
+    private Integer userId;
 }

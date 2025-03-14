@@ -21,8 +21,6 @@ public class NewsEntity {
     private String title;
     @TableField("content")
     private String content;
-    @TableField("image_id")
-    private Integer imageId;
     @TableField("source")
     private String source;
     @TableField("type")

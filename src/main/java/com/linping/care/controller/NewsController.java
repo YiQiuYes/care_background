@@ -26,7 +26,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 @Tag(name = "新闻控制类")
 @RestController
@@ -71,28 +70,6 @@ public class NewsController {
             return ResultData.fail(ReturnCode.RC500.getCode(), "获取新闻列表失败");
         }
 
-        Object records = newsList.get("records");
-        ArrayList<NewsDTO> newsDTOList = new ArrayList<>();
-        if (records instanceof List) {
-            ((List<?>) records).forEach(item -> {
-                NewsEntity newsEntity = (NewsEntity) item;
-                ImageEntity imageEntity = imageService.getById(newsEntity.getImageId());
-                if (imageEntity != null) {
-                    NewsDTO newsDTO = new NewsDTO(
-                            newsEntity.getId(),
-                            newsEntity.getTitle(),
-                            newsEntity.getContent(),
-                            imageEntity.getSrc(),
-                            newsEntity.getSource(),
-                            newsEntity.getType(),
-                            newsEntity.getCreateTime());
-                    newsDTOList.add(newsDTO);
-                }
-            });
-        }
-
-        newsList.put("records", newsDTOList);
-
         return ResultData.success(newsList);
     }
 
@@ -131,18 +108,7 @@ public class NewsController {
             newsEntity.setTitle(title);
             newsEntity.setContent(content);
             String fileUrl = FileUtil.getImageUrl("news", file, currentPath, picturePath, picturePath_mapping, newsPath, String.valueOf(ip_port));
-            // 插入image数据库
-            ImageEntity imageEntity = new ImageEntity();
-            imageEntity.setSrc(fileUrl);
-            boolean save = imageService.save(imageEntity);
-            if (!save) {
-                FileUtil.deleteImage(fileUrl, currentPath, picturePath, newsPath);
-                return ResultData.fail(ReturnCode.RC500.getCode(), "图片插入失败");
-            }
 
-            // 获取图片id
-            Integer imageId = imageEntity.getId();
-            newsEntity.setImageId(imageId);
             newsEntity.setSource(source);
             newsEntity.setType(type);
             LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(createTime), ZoneId.systemDefault());
@@ -150,12 +116,22 @@ public class NewsController {
             newsEntity.setCreateTime(timestamp);
             boolean isInsert = newsService.insertNews(newsEntity);
             if (isInsert) {
+                // 插入image数据库
+                ImageEntity imageEntity = new ImageEntity();
+                imageEntity.setSrc(fileUrl);
+                // 获取图片id
+                Integer newsEntityId = newsEntity.getId();
+                imageEntity.setNewsId(newsEntityId);
+                boolean save = imageService.save(imageEntity);
+                if (!save) {
+                    FileUtil.deleteImage(fileUrl, currentPath, picturePath, newsPath);
+                    return ResultData.fail(ReturnCode.RC500.getCode(), "图片插入失败");
+                }
                 return ResultData.success("插入成功");
             } else {
                 // 删除图片
                 FileUtil.deleteImage(fileUrl, currentPath, picturePath, newsPath);
-                imageService.removeById(imageEntity);
-                return ResultData.fail(ReturnCode.RC500.getCode(), "插入失败");
+                return ResultData.fail(ReturnCode.RC500.getCode(), "资讯插入失败");
             }
         } catch (Exception e) {
             return ResultData.fail(ReturnCode.RC500.getCode(), e.getMessage());
@@ -194,24 +170,18 @@ public class NewsController {
             }
             newsEntity.setTitle(title);
             newsEntity.setContent(content);
+            newsEntity.setSource(source);
+            newsEntity.setType(type);
 
-            ImageEntity imageEntity = imageService.getById(newsEntity.getImageId());
+            ImageEntity imageEntity = imageService.getByNewsId(id);
             if (imageEntity == null) {
                 return ResultData.fail(ReturnCode.RC500.getCode(), "图片不存在");
             }
-            newsEntity.setSource(source);
-            newsEntity.setType(type);
-            newsEntity.setImageId(imageEntity.getId());
 
             if (file != null) {
                 String fileUrl = FileUtil.getImageUrl("news", file, currentPath, picturePath, picturePath_mapping, newsPath, String.valueOf(ip_port));
                 // 删除原图片url
-                boolean isDelete = FileUtil.deleteImage(imageEntity.getSrc(), currentPath, picturePath, newsPath);
-                if (!isDelete) {
-                    FileUtil.deleteImage(fileUrl, currentPath, picturePath, newsPath);
-                    return ResultData.fail(ReturnCode.RC500.getCode(), "原图片删除失败");
-                }
-
+                FileUtil.deleteImage(imageEntity.getSrc(), currentPath, picturePath, newsPath);
                 imageEntity.setSrc(fileUrl);
                 boolean isUpdateImage = imageService.updateById(imageEntity);
                 if (!isUpdateImage) {
@@ -247,20 +217,8 @@ public class NewsController {
         if (newsEntity == null) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "新闻不存在");
         }
-        // 获取图片url
-        ImageEntity imageEntity = imageService.getById(newsEntity.getImageId());
-        if (imageEntity == null) {
-            return ResultData.fail(ReturnCode.RC500.getCode(), "图片不存在");
-        }
 
-        NewsDTO newsDTO = new NewsDTO(
-                newsEntity.getId(),
-                newsEntity.getTitle(),
-                newsEntity.getContent(),
-                imageEntity.getSrc(),
-                newsEntity.getSource(),
-                newsEntity.getType(),
-                newsEntity.getCreateTime());
+        NewsDTO newsDTO =  newsService.getNewsDetailById(id);
         return ResultData.success(newsDTO);
     }
 }

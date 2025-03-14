@@ -2,7 +2,10 @@ package com.linping.care.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.yulichang.base.MPJBaseServiceImpl;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import com.linping.care.dto.UserInfoDTO;
+import com.linping.care.entity.ImageEntity;
 import com.linping.care.entity.UserEntity;
 import com.linping.care.mapper.UserMapper;
 import com.linping.care.service.UserService;
@@ -15,7 +18,7 @@ import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl extends ServiceImpl<UserMapper, UserEntity> implements UserService {
+public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> implements UserService {
     private final UserMapper userMapper;
 
     @Override
@@ -100,21 +103,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserEntity> impleme
     }
 
     @Override
-    public UserEntity getUserInfo(String token) {
+    public UserInfoDTO getUserInfo(String token) {
         String id = JWTUtil.getTokenInfo(token).getClaim("id").asString();
         if (id == null) {
             throw new IllegalArgumentException("token无效");
         }
 
-        QueryWrapper<UserEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("id", id);
-        UserEntity userEntity = userMapper.selectOne(queryWrapper);
-        if (userEntity == null) {
+        MPJLambdaWrapper<UserEntity> queryWrapper = new MPJLambdaWrapper<>();
+        queryWrapper.selectAll(UserEntity.class);
+        queryWrapper.selectAs(ImageEntity::getSrc, UserInfoDTO::getAvatar);
+        queryWrapper.leftJoin(ImageEntity.class, ImageEntity::getUserId, UserEntity::getId);
+        queryWrapper.eq(UserEntity::getId, id);
+        UserInfoDTO userInfoDTO = userMapper.selectJoinOne(UserInfoDTO.class, queryWrapper);
+        if (userInfoDTO == null) {
             throw new IllegalArgumentException("用户不存在");
         }
-        userEntity.setPassword("");
-        userEntity.setRefreshToken("");
-        userEntity.setPhone("");
-        return userEntity;
+        userInfoDTO.setPassword("");
+        userInfoDTO.setRefreshToken("");
+        userInfoDTO.setPhone("");
+        return userInfoDTO;
     }
 }
