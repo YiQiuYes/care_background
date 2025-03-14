@@ -96,5 +96,15 @@ public class JWTUtil {
         payload.put("type", "refreshToken");
         return generaRefreshToken(payload);
     }
+
+    /**
+     * 获取id
+     * @param token 传入token
+     * @return id
+     */
+    public static String getId(String token) {
+        DecodedJWT tokenInfo = JWTUtil.getTokenInfo(token);
+        return tokenInfo.getClaim("id").asString();
+    }
 }
 

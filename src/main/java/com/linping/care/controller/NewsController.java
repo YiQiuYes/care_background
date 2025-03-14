@@ -1,13 +1,12 @@
 package com.linping.care.controller;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.linping.care.dto.NewsDTO;
 import com.linping.care.entity.*;
 import com.linping.care.service.ImageService;
 import com.linping.care.service.NewsService;
 import com.linping.care.service.UserService;
+import com.linping.care.utils.AuthUtil;
 import com.linping.care.utils.FileUtil;
-import com.linping.care.utils.JWTUtil;
 import com.linping.care.utils.NewsUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -93,14 +92,9 @@ public class NewsController {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
         }
 
-        DecodedJWT tokenInfo = JWTUtil.getTokenInfo(token);
-        String id = tokenInfo.getClaim("id").asString();
-
         // 插入新闻
         try {
-            UserEntity userEntity = userService.getById(id);
-
-            if (userEntity.getAuth() <= 1) {
+            if (AuthUtil.isAuth(token, userService)) {
                 return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
             }
 
@@ -153,14 +147,9 @@ public class NewsController {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
         }
 
-        DecodedJWT tokenInfo = JWTUtil.getTokenInfo(token);
-        String userId = tokenInfo.getClaim("id").asString();
-
         // 更新新闻
         try {
-            UserEntity userEntity = userService.getById(userId);
-
-            if (userEntity.getAuth() <= 1) {
+            if (AuthUtil.isAuth(token, userService)) {
                 return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
             }
 
