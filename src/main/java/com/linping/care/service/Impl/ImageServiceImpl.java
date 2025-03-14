@@ -1,6 +1,6 @@
 package com.linping.care.service.Impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.query.MPJLambdaQueryWrapper;
 import com.linping.care.entity.ImageEntity;
 import com.linping.care.mapper.ImageMapper;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ImageServiceImpl extends ServiceImpl<ImageMapper, ImageEntity> implements ImageService {
+public class ImageServiceImpl extends MPJBaseServiceImpl<ImageMapper, ImageEntity> implements ImageService {
     private final ImageMapper imageMapper;
 
     @Override
