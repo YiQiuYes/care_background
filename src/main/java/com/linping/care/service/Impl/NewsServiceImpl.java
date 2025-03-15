@@ -1,6 +1,5 @@
 package com.linping.care.service.Impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
@@ -13,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,15 +48,15 @@ public class NewsServiceImpl extends MPJBaseServiceImpl<NewsMapper, NewsEntity> 
     }
 
     @Override
-    public ArrayList<Object> getNewsSlide() {
+    public List<NewsDTO> getNewsSlide() {
         // 随机从数据库中获取不同类型的新闻
-        QueryWrapper<NewsEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select(NewsEntity.class, i -> !i.getColumn().equals("content"));
+        MPJLambdaWrapper<NewsEntity> queryWrapper = new MPJLambdaWrapper<>();
+        queryWrapper.selectFilter(NewsEntity.class, i -> !i.getColumn().equals("content"));
+        queryWrapper.selectAs(ImageEntity::getSrc, NewsDTO::getImageSrc);
         queryWrapper.orderByDesc("create_time");
         queryWrapper.last("limit 3");
-        ArrayList<NewsEntity> newsEntityList = (ArrayList<NewsEntity>) newsMapper.selectList(queryWrapper);
-
-        return new ArrayList<>(newsEntityList);
+        queryWrapper.leftJoin(ImageEntity.class, ImageEntity::getNewsId, NewsEntity::getId);
+        return newsMapper.selectJoinList(NewsDTO.class, queryWrapper);
     }
 
     @Override

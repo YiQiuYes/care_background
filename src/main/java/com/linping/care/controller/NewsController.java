@@ -1,13 +1,15 @@
 package com.linping.care.controller;
 
+import com.github.yulichang.toolkit.JoinWrappers;
+import com.github.yulichang.wrapper.DeleteJoinWrapper;
 import com.linping.care.dto.NewsDTO;
 import com.linping.care.entity.*;
 import com.linping.care.service.ImageService;
 import com.linping.care.service.NewsService;
 import com.linping.care.service.UserService;
 import com.linping.care.utils.AuthUtil;
+import com.linping.care.utils.CheckParamUtil;
 import com.linping.care.utils.FileUtil;
-import com.linping.care.utils.NewsUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -23,8 +25,8 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @Tag(name = "新闻控制类")
 @RestController
@@ -74,7 +76,7 @@ public class NewsController {
 
     @Operation(summary = "新闻轮播图")
     @GetMapping("/news/slide")
-    public ResultData<ArrayList<Object>> newsSlide() {
+    public ResultData<List<NewsDTO>> newsSlide() {
         return ResultData.success(newsService.getNewsSlide());
     }
 
@@ -88,7 +90,7 @@ public class NewsController {
                                          @RequestHeader("token") String token,
                                          @RequestPart MultipartFile file) {
         // 校验参数是否为空
-        if (!NewsUtil.newsCheck(title, content, source, type, createTime)) {
+        if (!CheckParamUtil.newsCheck(title, content, source, type, createTime)) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
         }
 
@@ -143,7 +145,7 @@ public class NewsController {
                                          @RequestHeader("token") String token,
                                          @RequestPart(required = false) MultipartFile file) {
         // 校验参数是否为空
-        if (!NewsUtil.newsCheck(id, title, content, source, type, createTime)) {
+        if (!CheckParamUtil.newsCheck(id, title, content, source, type, createTime)) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
         }
 
@@ -209,5 +211,42 @@ public class NewsController {
 
         NewsDTO newsDTO =  newsService.getNewsDetailById(id);
         return ResultData.success(newsDTO);
+    }
+
+    @Operation(summary = "删除资讯")
+    @Parameters({
+            @Parameter(name = "id", description = "资讯ID", required = true)
+    })
+    @GetMapping("/news/delete")
+    public ResultData<String> nursingDelete(@RequestParam("id") Integer id, @RequestHeader("token") String token) {
+        if (id == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+
+        if (AuthUtil.isAuth(token, userService)) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
+        }
+
+        NewsEntity newsEntity = newsService.getById(id);
+        if (newsEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "资讯不存在");
+        }
+
+        List<ImageEntity> imageList = imageService.NewsImagesById(id);
+        for (ImageEntity imageEntity : imageList) {
+            FileUtil.deleteImage(imageEntity.getSrc(), currentPath, picturePath, newsPath);
+        }
+
+        DeleteJoinWrapper<ImageEntity> deleteJoinWrapper = JoinWrappers.delete(ImageEntity.class)
+                .deleteAll()
+                .leftJoin(NewsEntity.class, NewsEntity::getId, ImageEntity::getNewsId)
+                .eq(ImageEntity::getNewsId, id);
+
+        boolean isDelete = imageService.deleteJoin(deleteJoinWrapper);
+        if (!isDelete) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "删除资讯信息失败");
+        }
+
+        return ResultData.success("删除资讯信息成功");
     }
 }

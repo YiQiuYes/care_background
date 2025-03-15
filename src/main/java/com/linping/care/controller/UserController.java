@@ -79,7 +79,7 @@ public class UserController {
             data.put("token", JWTUtil.reNewToken(newRefreshToken));
             return ResultData.success(data);
         } catch (Exception e) {
-            return ResultData.fail(ReturnCode.RC500.getCode(), e.getMessage());
+            return ResultData.fail(ReturnCode.RC402.getCode(), e.getMessage());
         }
     }
 

@@ -44,3 +44,6 @@ pictureFile:
   path-mapping: "/images"
   news-path: "/news"
   avatar-path: "/avatar"
+  nursing-path: "/nursing"
+map:
+  key: "e5a05938fdbb575dd2a70b03f490aa1d"

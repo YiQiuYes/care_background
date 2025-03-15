@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -18,7 +20,24 @@ public class ImageServiceImpl extends MPJBaseServiceImpl<ImageMapper, ImageEntit
     @Override
     public ImageEntity getByNewsId(Integer id) {
         MPJLambdaQueryWrapper<ImageEntity> queryWrapper = new MPJLambdaQueryWrapper<>();
+        queryWrapper.selectAll(ImageEntity.class);
         queryWrapper.eq(ImageEntity::getNewsId, id);
         return imageMapper.selectOne(queryWrapper);
+    }
+
+    @Override
+    public List<ImageEntity> NursingImagesById(Integer id) {
+        MPJLambdaQueryWrapper<ImageEntity> queryWrapper = new MPJLambdaQueryWrapper<>();
+        queryWrapper.selectAll(ImageEntity.class);
+        queryWrapper.eq(ImageEntity::getNursingId, id);
+        return imageMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public List<ImageEntity> NewsImagesById(Integer id) {
+        MPJLambdaQueryWrapper<ImageEntity> queryWrapper = new MPJLambdaQueryWrapper<>();
+        queryWrapper.selectAll(ImageEntity.class);
+        queryWrapper.eq(ImageEntity::getNewsId, id);
+        return imageMapper.selectList(queryWrapper);
     }
 }

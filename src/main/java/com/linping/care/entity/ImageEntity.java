@@ -21,4 +21,6 @@ public class ImageEntity {
     private Integer newsId;
     @TableField(value = "user_id")
     private Integer userId;
+    @TableField(value = "nursing_id")
+    private Integer nursingId;
 }
