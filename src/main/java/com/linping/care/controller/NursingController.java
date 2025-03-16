@@ -5,14 +5,17 @@ import com.github.yulichang.query.MPJLambdaQueryWrapper;
 import com.github.yulichang.toolkit.JoinWrappers;
 import com.github.yulichang.wrapper.DeleteJoinWrapper;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import com.linping.care.dto.NursingBookingDTO;
 import com.linping.care.dto.NursingDTO;
 import com.linping.care.entity.*;
 import com.linping.care.service.ImageService;
+import com.linping.care.service.NursingBookingService;
 import com.linping.care.service.NursingService;
 import com.linping.care.service.UserService;
 import com.linping.care.utils.AuthUtil;
 import com.linping.care.utils.CheckParamUtil;
 import com.linping.care.utils.FileUtil;
+import com.linping.care.utils.JWTUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -26,6 +29,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +61,8 @@ public class NursingController {
     private final NursingService nursingService;
 
     private final ImageService imageService;
+
+    private final NursingBookingService nursingBookingService;
 
     @Operation(summary = "获取养老院信息列表")
     @Parameters({
@@ -327,5 +336,42 @@ public class NursingController {
         }
 
         return ResultData.success("删除养老院信息成功");
+    }
+
+    @Operation(summary = "预约养老院")
+    @PostMapping("/nursing/booking")
+    public ResultData<String> nursingBooking(@RequestBody NursingBookingDTO nursingBookingDTO, @RequestHeader("token") String token) {
+        // 校验参数是否为空
+        if (nursingBookingDTO == null || nursingBookingDTO.getNursingId() == null ||
+                nursingBookingDTO.getName() == null || nursingBookingDTO.getAddress() == null ||
+                nursingBookingDTO.getPhone() == null && nursingBookingDTO.getTime() == null ||
+                nursingBookingDTO.getContent() == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+
+        NursingBookingEntity bookingEntity = new NursingBookingEntity();
+        String userId = JWTUtil.getId(token);
+        if (userId == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户未登录");
+        }
+        bookingEntity.setUserId(Integer.parseInt(userId));
+        bookingEntity.setNursingId(nursingBookingDTO.getNursingId());
+        bookingEntity.setName(nursingBookingDTO.getName());
+        bookingEntity.setAddress(nursingBookingDTO.getAddress());
+        bookingEntity.setPhone(nursingBookingDTO.getPhone());
+        bookingEntity.setContent(nursingBookingDTO.getContent());
+
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(nursingBookingDTO.getTime()), ZoneId.systemDefault());
+        Timestamp timestamp = Timestamp.valueOf(localDateTime);
+        bookingEntity.setTime(timestamp);
+        bookingEntity.setContent(nursingBookingDTO.getContent());
+        bookingEntity.setStatus(0);
+
+        boolean save = nursingBookingService.save(bookingEntity);
+        if (!save) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "预约失败");
+        }
+
+        return ResultData.success("预约成功");
     }
 }
