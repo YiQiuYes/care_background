@@ -26,6 +26,14 @@ public class ImageServiceImpl extends MPJBaseServiceImpl<ImageMapper, ImageEntit
     }
 
     @Override
+    public ImageEntity getByGoodsId(Integer id) {
+        MPJLambdaQueryWrapper<ImageEntity> queryWrapper = new MPJLambdaQueryWrapper<>();
+        queryWrapper.selectAll(ImageEntity.class);
+        queryWrapper.eq(ImageEntity::getGoodsId, id);
+        return imageMapper.selectOne(queryWrapper);
+    }
+
+    @Override
     public List<ImageEntity> NursingImagesById(Integer id) {
         MPJLambdaQueryWrapper<ImageEntity> queryWrapper = new MPJLambdaQueryWrapper<>();
         queryWrapper.selectAll(ImageEntity.class);
