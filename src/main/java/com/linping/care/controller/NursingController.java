@@ -29,10 +29,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -360,10 +356,7 @@ public class NursingController {
         bookingEntity.setAddress(nursingBookingDTO.getAddress());
         bookingEntity.setPhone(nursingBookingDTO.getPhone());
         bookingEntity.setContent(nursingBookingDTO.getContent());
-
-        LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(nursingBookingDTO.getTime()), ZoneId.systemDefault());
-        Timestamp timestamp = Timestamp.valueOf(localDateTime);
-        bookingEntity.setTime(timestamp);
+        bookingEntity.setTime(nursingBookingDTO.getTime());
         bookingEntity.setContent(nursingBookingDTO.getContent());
         bookingEntity.setStatus(0);
 
@@ -373,5 +366,69 @@ public class NursingController {
         }
 
         return ResultData.success("预约成功");
+    }
+
+    @Operation(summary = "获取养老院预约信息列表")
+    @Parameters({
+            @Parameter(name = "pageNow", description = "当前页码", required = true),
+            @Parameter(name = "pageSize", description = "每页条数", required = true)
+    })
+    @GetMapping("/nursing/bookingList")
+    public ResultData<Object> nursingBookingList(@RequestParam(value = "pageNow", defaultValue = "1") int pageNow,
+                                                 @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
+        if (pageNow <= 0 || pageSize <= 0) {
+            return ResultData.fail(400, "获取养老院预约信息列表api中页码或页数错误");
+        }
+
+
+        HashMap<String, Object> list = nursingBookingService.getNursingBookingList(pageNow, pageSize);
+        return ResultData.success(list);
+    }
+
+    @Operation(summary = "更新养老院预约信息")
+    @Parameters({
+            @Parameter(name = "id", description = "预约ID", required = true),
+            @Parameter(name = "status", description = "预约状态", required = true)
+    })
+    @GetMapping("/nursing/updateBooking")
+    public ResultData<String> updateBooking(@RequestParam("id") Integer id, @RequestParam("status") Integer status, @RequestHeader("token") String token) {
+        if (id == null || status == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+
+        // 验证权限
+        if (AuthUtil.isAuth(token, userService)) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+
+        boolean update = nursingBookingService.updateNursingBooking(id, status);
+        if (!update) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "更新预约信息失败");
+        }
+
+        return ResultData.success("更新预约信息成功");
+    }
+
+    @Operation(summary = "删除养老院预约信息")
+    @Parameters({
+            @Parameter(name = "id", description = "预约ID", required = true)
+    })
+    @GetMapping("/nursing/deleteBooking")
+    public ResultData<String> deleteBooking(@RequestParam("id") Integer id, @RequestHeader("token") String token) {
+        if (id == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+
+        // 验证权限
+        if (AuthUtil.isAuth(token, userService)) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+
+        boolean remove = nursingBookingService.removeById(id);
+        if (!remove) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "删除预约信息失败");
+        }
+
+        return ResultData.success("删除预约信息成功");
     }
 }
