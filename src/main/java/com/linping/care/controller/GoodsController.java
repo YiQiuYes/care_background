@@ -11,6 +11,8 @@ import com.linping.care.service.UserService;
 import com.linping.care.utils.AuthUtil;
 import com.linping.care.utils.FileUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.HashMap;
 
 @Tag(name = "商品控制类")
 @RestController
@@ -158,5 +161,26 @@ public class GoodsController {
         }
 
         return ResultData.success("更新成功");
+    }
+
+    @Operation(summary = "获取商品列表")
+    @Parameters({
+            @Parameter(name = "type", description = "商品类型", required = true, schema = @Schema(allowableValues = {"common"})),
+            @Parameter(name = "pageNow", description = "当前页码", required = true),
+            @Parameter(name = "pageSize", description = "每页条数", required = true)
+    })
+    @GetMapping("/goods/list")
+    public ResultData<Object> newsList(@RequestParam("type") String type,
+                                       @RequestParam(value = "pageNow", defaultValue = "1") int pageNow,
+                                       @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
+        if (pageNow <= 0 || pageSize <= 0) {
+            return ResultData.fail(400, "页码或页数错误");
+        }
+        HashMap<String, Object> goodsList = goodsService.getGoodsList(type, pageNow, pageSize);
+        if (goodsList == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "获取商品列表失败");
+        }
+
+        return ResultData.success(goodsList);
     }
 }
