@@ -45,5 +45,6 @@ pictureFile:
   news-path: "/news"
   avatar-path: "/avatar"
   nursing-path: "/nursing"
+  goods-path: "/goods"
 map:
   key: "e5a05938fdbb575dd2a70b03f490aa1d"

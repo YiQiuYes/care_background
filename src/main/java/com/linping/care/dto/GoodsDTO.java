@@ -23,6 +23,8 @@ public class GoodsDTO {
     private String type;
     @Schema(name = "price",description = "商品价格")
     private BigDecimal price;
+    @Schema(name = "imageSrc",description = "商品图片")
+    private String imageSrc;
     @Schema(name = "isActive",description = "是否激活")
     private Integer isActive;
     @Schema(name = "createTime",description = "创建时间")
