@@ -9,24 +9,26 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 @Data
-@Schema(name="GoodsDTO",description ="商品信息类" )
+@Schema(name = "GoodsDTO", description = "商品信息类")
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoodsDTO {
-    @Schema(name = "id",description = "主键id")
+    @Schema(name = "id", description = "主键id")
     private Integer id;
-    @Schema(name = "name",description = "商品名称")
+    @Schema(name = "name", description = "商品名称")
     private String name;
-    @Schema(name = "description",description = "商品描述")
+    @Schema(name = "description", description = "商品描述")
     private String description;
-    @Schema(name = "type",description = "商品类型", allowableValues = {"common"})
+    @Schema(name = "type", description = "商品类型",
+            allowableValues = {"common", "housekeeping", "medicalCare",
+                    "ageingAtHome", "goods", "device", "healthCare"})
     private String type;
-    @Schema(name = "price",description = "商品价格")
+    @Schema(name = "price", description = "商品价格")
     private BigDecimal price;
-    @Schema(name = "imageSrc",description = "商品图片")
+    @Schema(name = "imageSrc", description = "商品图片")
     private String imageSrc;
-    @Schema(name = "isActive",description = "是否激活")
+    @Schema(name = "isActive", description = "是否激活")
     private Integer isActive;
-    @Schema(name = "createTime",description = "创建时间")
+    @Schema(name = "createTime", description = "创建时间")
     private Timestamp createTime;
 }
