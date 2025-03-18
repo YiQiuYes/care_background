@@ -24,6 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 
 @Tag(name = "商品控制类")
@@ -58,7 +61,7 @@ public class GoodsController {
                                           @Schema(name = "type", description = "商品描述", allowableValues = {"common"}) @RequestParam("type") String type,
                                           @Schema(name = "price", description = "商品价格") @RequestParam("price") BigDecimal price,
                                           @Schema(name = "isActive", description = "创建时间") @RequestParam("isActive") Integer isActive,
-                                          @Schema(name = "createTime", description = "创建时间") @RequestParam("createTime") Timestamp createTime,
+                                          @Schema(name = "createTime", description = "创建时间") @RequestParam("createTime") Long createTime,
                                           @RequestHeader("token") String token,
                                           @RequestPart MultipartFile file) {
         if (name == null || type == null || isActive == null || createTime == null) {
@@ -75,7 +78,10 @@ public class GoodsController {
         goodsDTO.setType(type);
         goodsDTO.setPrice(price);
         goodsDTO.setIsActive(isActive);
-        goodsDTO.setCreateTime(createTime);
+
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(createTime), ZoneId.systemDefault());
+        Timestamp timestamp = Timestamp.valueOf(localDateTime);
+        goodsDTO.setCreateTime(timestamp);
 
         GoodsEntity goodsEntity = goodsService.insertGoods(goodsDTO);
         if (goodsEntity == null) {
@@ -110,16 +116,22 @@ public class GoodsController {
                                           @Schema(name = "description", description = "商品描述") @RequestParam("description") String description,
                                           @Schema(name = "type", description = "商品描述", allowableValues = {"common"}) @RequestParam("type") String type,
                                           @Schema(name = "price", description = "商品价格") @RequestParam("price") BigDecimal price,
-                                          @Schema(name = "isActive", description = "创建时间") @RequestParam("isActive") Integer isActive,
-                                          @Schema(name = "createTime", description = "创建时间") @RequestParam("createTime") Timestamp createTime,
+                                          @Schema(name = "isActive", description = "是否上架") @RequestParam("isActive") Integer isActive,
+                                          @Schema(name = "createTime", description = "创建时间") @RequestParam("createTime") Long createTime,
                                           @RequestHeader("token") String token,
                                           @RequestPart(name = "file", value = "file", required = false) MultipartFile file) {
-        if (id == null || name == null || type == null || isActive == null || createTime == null) {
+        if (id == null || name == null || type == null || isActive == null) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
         }
 
         if (AuthUtil.isAuth(token, userService)) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
+        }
+
+        // 查询商品是否存在
+        GoodsEntity goodsEntity = goodsService.getById(id);
+        if (goodsEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "商品不存在");
         }
 
         GoodsDTO goodsDTO = new GoodsDTO();
@@ -129,11 +141,18 @@ public class GoodsController {
         goodsDTO.setType(type);
         goodsDTO.setPrice(price);
         goodsDTO.setIsActive(isActive);
-        goodsDTO.setCreateTime(createTime);
+
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(createTime), ZoneId.systemDefault());
+        Timestamp timestamp = Timestamp.valueOf(localDateTime);
+        goodsDTO.setCreateTime(timestamp);
 
         boolean updateById = goodsService.updateGoods(goodsDTO);
         if (!updateById) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "更新商品失败");
+        }
+
+        if (file == null) {
+            return ResultData.success("更新成功");
         }
 
         // 更新图片
