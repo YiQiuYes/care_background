@@ -189,7 +189,7 @@ public class GoodsController {
             @Parameter(name = "pageSize", description = "每页条数", required = true)
     })
     @GetMapping("/goods/list")
-    public ResultData<Object> newsList(@RequestParam("type") String type,
+    public ResultData<Object> goodsList(@RequestParam("type") String type,
                                        @RequestParam(value = "pageNow", defaultValue = "1") int pageNow,
                                        @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
         if (pageNow <= 0 || pageSize <= 0) {
