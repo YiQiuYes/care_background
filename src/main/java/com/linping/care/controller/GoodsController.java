@@ -202,4 +202,37 @@ public class GoodsController {
 
         return ResultData.success(goodsList);
     }
+
+    @Operation(summary = "根据商品ID获取商品")
+    @GetMapping("/goods/id")
+    @Parameters({
+            @Parameter(name = "id", description = "商品ID", required = true)
+    })
+    public ResultData<Object> goodsById(@RequestParam("id") Integer id) {
+        if (id == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+
+        GoodsEntity goodsEntity = goodsService.getById(id);
+        if (goodsEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "商品不存在");
+        }
+
+        ImageEntity imageEntity = imageService.getByGoodsId(id);
+        if (imageEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "商品图片不存在");
+        }
+
+        GoodsDTO goodsDTO = new GoodsDTO();
+        goodsDTO.setId(goodsEntity.getId());
+        goodsDTO.setName(goodsEntity.getName());
+        goodsDTO.setDescription(goodsEntity.getDescription());
+        goodsDTO.setType(goodsEntity.getType());
+        goodsDTO.setPrice(goodsEntity.getPrice());
+        goodsDTO.setImageSrc(imageEntity.getSrc());
+        goodsDTO.setIsActive(goodsEntity.getIsActive());
+        goodsDTO.setCreateTime(goodsEntity.getCreateTime());
+
+        return ResultData.success(goodsDTO);
+    }
 }
