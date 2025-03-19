@@ -1,13 +1,17 @@
 package com.linping.care.service.Impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.query.MPJLambdaQueryWrapper;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import com.linping.care.dto.GoodsDTO;
 import com.linping.care.dto.OrdersDTO;
 import com.linping.care.entity.GoodsEntity;
+import com.linping.care.entity.ImageEntity;
 import com.linping.care.entity.OrdersEntity;
 import com.linping.care.mapper.OrdersMapper;
 import com.linping.care.service.GoodsService;
+import com.linping.care.service.ImageService;
 import com.linping.care.service.OrdersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +32,8 @@ public class OrdersServiceImpl extends MPJBaseServiceImpl<OrdersMapper, OrdersEn
     private final OrdersMapper ordersMapper;
 
     private final GoodsService goodsService;
+
+    private final ImageService imageService;
 
     @Override
     @Transactional
@@ -78,17 +81,20 @@ public class OrdersServiceImpl extends MPJBaseServiceImpl<OrdersMapper, OrdersEn
     }
 
     @Override
-    public List<OrdersDTO> ordersTypeList(String type, Integer status) {
+    public HashMap<String, Object> ordersTypeList(String type, Integer status, Integer pageNow, Integer pageSize) {
         MPJLambdaWrapper<OrdersEntity> wrapper = new MPJLambdaWrapper<>();
         wrapper.selectAll(OrdersEntity.class);
         if (status != null) {
             wrapper.eq(OrdersEntity::getStatus, status);
         }
         wrapper.leftJoin(GoodsEntity.class, GoodsEntity::getId, OrdersEntity::getGoodsId);
-        if ("common".equals(type)) {
+        if (!"common".equals(type)) {
             wrapper.eq(GoodsEntity::getType, type);
         }
-        List<OrdersEntity> ordersEntities = ordersMapper.selectJoinList(OrdersEntity.class, wrapper);
+
+        Page<OrdersEntity> page = new Page<>(pageNow, pageSize);
+        page = ordersMapper.selectJoinPage(page, OrdersEntity.class, wrapper);
+        List<OrdersEntity> ordersEntities = page.getRecords();
         ArrayList<OrdersDTO> list = new ArrayList<>();
 
         for (OrdersEntity ordersEntity : ordersEntities) {
@@ -103,10 +109,26 @@ public class OrdersServiceImpl extends MPJBaseServiceImpl<OrdersMapper, OrdersEn
             ordersDTO.setStatus(ordersEntity.getStatus());
             ordersDTO.setPhone(ordersEntity.getPhone());
             ordersDTO.setCount(ordersEntity.getCount());
+
+            GoodsDTO goodsDTO = new GoodsDTO();
+            goodsDTO.setId(goodsEntity.getId());
+            goodsDTO.setName(goodsEntity.getName());
+            goodsDTO.setDescription(goodsEntity.getDescription());
+            goodsDTO.setType(goodsEntity.getType());
+            goodsDTO.setPrice(goodsEntity.getPrice());
+            ImageEntity imageEntity = imageService.getByGoodsId(ordersDTO.getGoodsId());
+            goodsDTO.setImageSrc(imageEntity.getSrc());
+            goodsDTO.setIsActive(goodsEntity.getIsActive());
+            goodsDTO.setCreateTime(goodsEntity.getCreateTime());
+            ordersDTO.setGoodsDTO(goodsDTO);
             list.add(ordersDTO);
         }
 
-        return list;
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("pages", page.getPages());
+        result.put("total", page.getTotal());
+        result.put("records", list);
+        return result;
     }
 
     @Override

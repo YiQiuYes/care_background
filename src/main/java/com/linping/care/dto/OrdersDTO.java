@@ -16,6 +16,8 @@ public class OrdersDTO {
     private Integer id;
     @Schema(name = "goodsId", description = "商品id列表")
     private Integer goodsId;
+    @Schema(name = "count", description = "商品数量")
+    private GoodsDTO goodsDTO;
     @Schema(name = "price", description = "实付价格")
     private BigDecimal price;
     @Schema(name = "address", description = "收货地址")

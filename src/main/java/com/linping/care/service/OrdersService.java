@@ -4,6 +4,7 @@ import com.github.yulichang.base.MPJBaseService;
 import com.linping.care.dto.OrdersDTO;
 import com.linping.care.entity.OrdersEntity;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ public interface OrdersService extends MPJBaseService<OrdersEntity> {
 
     Map<String, List<OrdersEntity>> ordersMap(Integer userId);
 
-    List<OrdersDTO> ordersTypeList(String type, Integer status);
+    HashMap<String, Object> ordersTypeList(String type, Integer status, Integer pageNow, Integer pageSize);
 
     boolean modifyStatusById(Integer id, Integer status);
 

@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,24 +62,35 @@ public class OrdersController {
             @Parameter(name = "type", description = "商品类型", required = true,
                     schema = @Schema(allowableValues = {"common", "housekeeping", "medicalCare",
                     "ageingAtHome", "goods", "device", "healthCare"})),
+            @Parameter(name = "pageNow", description = "当前页码", required = true),
+            @Parameter(name = "pageSize", description = "每页条数", required = true),
             @Parameter(name = "status", description = "订单状态")
     })
-    public ResultData<Object> ordersTypeList(@RequestParam("type") String type, @RequestParam(value = "status", required = false) Integer status, @RequestHeader("token") String token) {
+    public ResultData<Object> ordersTypeList(@RequestParam("type") String type,
+                                             @RequestParam(value = "pageNow", defaultValue = "1") Integer pageNow,
+                                             @RequestParam(value = "pageSize", defaultValue = "30") Integer pageSize,
+                                             @RequestParam(value = "status", required = false) Integer status,
+                                             @RequestHeader("token") String token) {
         if (AuthUtil.isAuth(token, userService)) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
+        }
+
+        if (pageNow <= 0 || pageSize <= 0) {
+            return ResultData.fail(400, "页码或页数错误");
         }
 
         if (type == null || type.isEmpty()) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
         }
 
-        List<OrdersDTO> list = ordersService.ordersTypeList(type, status);
-        return ResultData.success(list);
+        HashMap<String, Object> map = ordersService.ordersTypeList(type, status, pageNow, pageSize);
+        return ResultData.success(map);
     }
 
     @Operation(summary = "修改订单状态")
     @GetMapping("/orders/modifyStatus")
     @Parameters({
+            @Parameter(name = "id", description = "订单id"),
             @Parameter(name = "status", description = "订单状态")
     })
     public ResultData<Object> modifyStatus(@RequestParam("id") Integer id, @RequestParam(value = "status") Integer status, @RequestHeader("token") String token) {
