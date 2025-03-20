@@ -1,11 +1,11 @@
 package com.linping.care.controller;
 
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.linping.care.dto.AddressDTO;
 import com.linping.care.dto.UserDTO;
 import com.linping.care.dto.UserInfoDTO;
-import com.linping.care.entity.ImageEntity;
-import com.linping.care.entity.ResultData;
-import com.linping.care.entity.ReturnCode;
-import com.linping.care.entity.UserEntity;
+import com.linping.care.entity.*;
+import com.linping.care.service.AddressService;
 import com.linping.care.service.ImageService;
 import com.linping.care.service.UserService;
 import com.linping.care.utils.FileUtil;
@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,6 +48,8 @@ public class UserController {
     private final UserService userService;
 
     private final ImageService imageService;
+
+    private final AddressService addressService;
 
     @PostMapping("/user/login")
     @Operation(summary = "用户登录")
@@ -136,8 +139,8 @@ public class UserController {
         return ResultData.success(data);
     }
 
-    @GetMapping("/user/getUserInfo")
     @Operation(summary = "获取用户信息")
+    @GetMapping("/user/getUserInfo")
     public ResultData<UserInfoDTO> getUserInfo(@RequestHeader("token") String token) {
         UserInfoDTO userInfoDTO = userService.getUserInfo(token);
         if (userInfoDTO == null) {
@@ -145,5 +148,105 @@ public class UserController {
         }
 
         return ResultData.success(userInfoDTO);
+    }
+
+    @Operation(summary = "添加用户地址")
+    @PostMapping("/user/addAddress")
+    public ResultData<String> addAddress(@RequestBody AddressDTO addressDTO, @RequestHeader("token") String token) {
+        String userId = JWTUtil.getId(token);
+        UserEntity userEntity = userService.getById(userId);
+        if (userEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户不存在");
+        }
+
+        // 验证参数
+        if (addressDTO.getName().isEmpty() || addressDTO.getPhone().isEmpty() || addressDTO.getProvince().isEmpty() || addressDTO.getCity().isEmpty() || addressDTO.getDistrict().isEmpty() || addressDTO.getDetail().isEmpty() || addressDTO.getIsDefault() == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+
+        AddressEntity addressEntity = new AddressEntity();
+        addressEntity.setUserId(Integer.valueOf(userId));
+        addressEntity.setName(addressDTO.getName());
+        addressEntity.setPhone(addressDTO.getPhone());
+        addressEntity.setProvince(addressDTO.getProvince());
+        addressEntity.setCity(addressDTO.getCity());
+        addressEntity.setDistrict(addressDTO.getDistrict());
+        addressEntity.setDetail(addressDTO.getDetail());
+        addressEntity.setIsDefault(addressDTO.getIsDefault());
+
+        if (addressDTO.getIsDefault()) {
+            UpdateWrapper<AddressEntity> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("user_id", userId);
+            updateWrapper.set("default", false);
+            addressService.update(updateWrapper);
+        }
+
+        boolean save = addressService.save(addressEntity);
+        if (!save) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "地址添加失败");
+        }
+
+        return ResultData.success("添加成功");
+    }
+
+    @Operation(summary = "更新用户地址")
+    @PostMapping("/user/updateAddress")
+    public ResultData<String> updateAddress(@RequestBody AddressDTO addressDTO, @RequestHeader("token") String token) {
+        String userId = JWTUtil.getId(token);
+        UserEntity userEntity = userService.getById(userId);
+        if (userEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户不存在");
+        }
+
+        // 验证参数
+        if (addressDTO.getId() == null || addressDTO.getName().isEmpty() || addressDTO.getPhone().isEmpty() || addressDTO.getProvince().isEmpty() || addressDTO.getCity().isEmpty() || addressDTO.getDistrict().isEmpty() || addressDTO.getDetail().isEmpty() || addressDTO.getIsDefault() == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
+        }
+
+        AddressEntity addressEntity = addressService.getById(addressDTO.getId());
+        if (addressEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "地址不存在");
+        }
+
+        addressEntity.setName(addressDTO.getName());
+        addressEntity.setPhone(addressDTO.getPhone());
+        addressEntity.setProvince(addressDTO.getProvince());
+        addressEntity.setCity(addressDTO.getCity());
+        addressEntity.setDistrict(addressDTO.getDistrict());
+        addressEntity.setDetail(addressDTO.getDetail());
+        addressEntity.setIsDefault(addressDTO.getIsDefault());
+
+        if (addressDTO.getIsDefault()) {
+            UpdateWrapper<AddressEntity> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("user_id", userId);
+            updateWrapper.set("is_default", false);
+            addressService.update(updateWrapper);
+        }
+
+        boolean update = addressService.updateById(addressEntity);
+        if (!update) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "地址更新失败");
+        }
+
+        return ResultData.success("更新成功");
+    }
+
+    @Operation(summary = "获取用户地址列表")
+    @GetMapping("/user/addressList")
+    public ResultData<Object> addressList(@RequestHeader("token") String token) {
+        String userId = JWTUtil.getId(token);
+        List<AddressDTO> addressDTOS = addressService.addressList(Integer.valueOf(userId));
+        return ResultData.success(addressDTOS);
+    }
+
+    @Operation(summary = "获取用户默认地址")
+    @GetMapping("/user/defaultAddress")
+    public ResultData<Object> defaultAddress(@RequestHeader("token") String token) {
+        String userId = JWTUtil.getId(token);
+        AddressEntity addressEntity = addressService.defaultAddress(Integer.valueOf(userId));
+        if (addressEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "地址不存在");
+        }
+        return ResultData.success(addressEntity);
     }
 }
