@@ -1,0 +1,21 @@
+name: PushBuild
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy
+        uses: matheusvanzan/sshpass-action@v2
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          user: 'root'
+          port: 22
+          pass: ${{ secrets.REMOTE_PASSWORD }}
+          run: |
+            cd /www/wwwroot/development/care_background
+            git reset --hard origin/master
