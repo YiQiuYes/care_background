@@ -48,6 +48,9 @@ public class GoodsController {
     @Value("${server.port}")
     private int ip_port;
 
+    @Value("${ip}")
+    private String ip;
+
     private final UserService userService;
 
     private final GoodsService goodsService;
@@ -90,7 +93,7 @@ public class GoodsController {
 
         String fileUrl;
         try {
-            fileUrl = FileUtil.getImageUrl("goods", file, currentPath, picturePath, picturePath_mapping, goodsPath, String.valueOf(ip_port));
+            fileUrl = FileUtil.getImageUrl("goods", file, currentPath, picturePath, picturePath_mapping, goodsPath, String.valueOf(ip_port), ip);
         } catch (IOException e) {
             return ResultData.fail(ReturnCode.RC500.getCode(), e.getMessage());
         }
@@ -169,7 +172,7 @@ public class GoodsController {
         // 上传新图片
         String fileUrl;
         try {
-            fileUrl = FileUtil.getImageUrl("goods", file, currentPath, picturePath, picturePath_mapping, goodsPath, String.valueOf(ip_port));
+            fileUrl = FileUtil.getImageUrl("goods", file, currentPath, picturePath, picturePath_mapping, goodsPath, String.valueOf(ip_port), ip);
         } catch (IOException e) {
             return ResultData.fail(ReturnCode.RC500.getCode(), e.getMessage());
         }

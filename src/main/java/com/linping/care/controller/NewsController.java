@@ -47,6 +47,9 @@ public class NewsController {
     @Value("${server.port}")
     private int ip_port;
 
+    @Value("${ip}")
+    private String ip;
+
     private final NewsService newsService;
 
     private final UserService userService;
@@ -103,7 +106,7 @@ public class NewsController {
             NewsEntity newsEntity = new NewsEntity();
             newsEntity.setTitle(title);
             newsEntity.setContent(content);
-            String fileUrl = FileUtil.getImageUrl("news", file, currentPath, picturePath, picturePath_mapping, newsPath, String.valueOf(ip_port));
+            String fileUrl = FileUtil.getImageUrl("news", file, currentPath, picturePath, picturePath_mapping, newsPath, String.valueOf(ip_port), ip);
 
             newsEntity.setSource(source);
             newsEntity.setType(type);
@@ -170,7 +173,7 @@ public class NewsController {
             }
 
             if (file != null) {
-                String fileUrl = FileUtil.getImageUrl("news", file, currentPath, picturePath, picturePath_mapping, newsPath, String.valueOf(ip_port));
+                String fileUrl = FileUtil.getImageUrl("news", file, currentPath, picturePath, picturePath_mapping, newsPath, String.valueOf(ip_port), ip);
                 // 删除原图片url
                 FileUtil.deleteImage(imageEntity.getSrc(), currentPath, picturePath, newsPath);
                 imageEntity.setSrc(fileUrl);

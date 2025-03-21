@@ -4,14 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.UUID;
 
 @Slf4j
 public class FileUtil {
     // picturePath=/images   picturePath_mapping=/images   newsPath=/news
-    public static String getImageUrl(String fileHeader, MultipartFile file, String currentPath, String picturePath, String picturePath_mapping, String typePath, String ip_port) throws IOException {
+    public static String getImageUrl(String fileHeader, MultipartFile file, String currentPath, String picturePath, String picturePath_mapping, String typePath, String ip_port, String ip) throws IOException {
         String fileName = file.getOriginalFilename();  // 文件名
         File dest;
         if (fileName != null) {
@@ -25,11 +24,10 @@ public class FileUtil {
         } catch (IOException e) {
             throw new RuntimeException("文件上传失败");
         }
-        String ip = InetAddress.getLocalHost().getHostAddress();
         return "http://" + ip + ":" + ip_port + picturePath_mapping + typePath + "/" + dest.getName();
     }
 
-    public static String getImageUrl(String fileHeader, File file, String currentPath, String picturePath, String picturePath_mapping, String typePath, String ip_port) throws IOException {
+    public static String getImageUrl(String fileHeader, File file, String currentPath, String picturePath, String picturePath_mapping, String typePath, String ip_port, String ip) {
         String fileName = file.getName();  // 文件名
         File dest = generateFile(fileName, fileHeader, currentPath, picturePath, typePath);
 
@@ -44,13 +42,27 @@ public class FileUtil {
             throw new RuntimeException(e);
         }
 
-        String ip = InetAddress.getLocalHost().getHostAddress();
         return "http://" + ip + ":" + ip_port + picturePath_mapping + typePath + "/" + dest.getName();
     }
 
-    public static ArrayList<String> getImageUrl(String fileHeader, MultipartFile[] files, String currentPath, String picturePath, String picturePath_mapping, String typePath, String ip_port) throws IOException {
-        String ip = InetAddress.getLocalHost().getHostAddress();
+    public static String getImageUrl(String fileHeader, String fileName, InputStream inputStream, String currentPath, String picturePath, String picturePath_mapping, String typePath, String ip_port, String ip) {
+        File dest = generateFile(fileName, fileHeader, currentPath, picturePath, typePath);
 
+        // 复制文件
+        try (OutputStream output = new FileOutputStream(dest)) {
+            byte[] buf = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buf)) > 0) {
+                output.write(buf, 0, bytesRead);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return "http://" + ip + ":" + ip_port + picturePath_mapping + typePath + "/" + dest.getName();
+    }
+
+    public static ArrayList<String> getImageUrl(String fileHeader, MultipartFile[] files, String currentPath, String picturePath, String picturePath_mapping, String typePath, String ip_port, String ip) throws IOException {
         ArrayList<String> urls = new ArrayList<>();
         // 遍历files
         for (MultipartFile file : files) {

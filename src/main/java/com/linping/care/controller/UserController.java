@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -44,6 +44,9 @@ public class UserController {
 
     @Value("${server.port}")
     private int ip_port;
+
+    @Value("${ip}")
+    private String ip;
 
     private final UserService userService;
 
@@ -118,8 +121,9 @@ public class UserController {
         ImageEntity imageEntity = new ImageEntity();
         try {
             ClassPathResource classPathResource = new ClassPathResource("default_avatar.png");
-            File file = classPathResource.getFile();
-            String avatar_src = FileUtil.getImageUrl("avatar", file, currentPath, picturePath, picturePath_mapping, avatarPath, String.valueOf(ip_port));
+            InputStream is = classPathResource.getInputStream();
+
+            String avatar_src = FileUtil.getImageUrl("avatar", "default_avatar.png", is, currentPath, picturePath, picturePath_mapping, avatarPath, String.valueOf(ip_port), ip);
             imageEntity.setSrc(avatar_src);
             imageEntity.setUserId(userEntity.getId());
             boolean save = imageService.save(imageEntity);
@@ -128,6 +132,7 @@ public class UserController {
                 return ResultData.fail(ReturnCode.RC500.getCode(), "头像保存失败");
             }
         } catch (Exception e) {
+            userService.removeById(userEntity);
             return ResultData.fail(ReturnCode.RC500.getCode(), e.getMessage());
         }
 

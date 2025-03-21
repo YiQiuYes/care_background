@@ -52,6 +52,9 @@ public class NursingController {
     @Value("${server.port}")
     private int ip_port;
 
+    @Value("${ip}")
+    private String ip;
+
     private final UserService userService;
 
     private final NursingService nursingService;
@@ -81,8 +84,8 @@ public class NursingController {
         page = nursingService.selectJoinListPage(page, NursingDTO.class, queryWrapper);
         List<NursingDTO> records = page.getRecords();
 
-        MPJLambdaQueryWrapper<ImageEntity> imageQueryWrapper = new MPJLambdaQueryWrapper<>();
         for (NursingDTO nursingDTO : records) {
+            MPJLambdaQueryWrapper<ImageEntity> imageQueryWrapper = new MPJLambdaQueryWrapper<>();
             imageQueryWrapper.selectAll(ImageEntity.class);
             imageQueryWrapper.eq(ImageEntity::getNursingId, nursingDTO.getId());
             List<ImageEntity> list = imageService.list(imageQueryWrapper);
@@ -142,7 +145,7 @@ public class NursingController {
 
         ArrayList<String> urls;
         try {
-            urls = FileUtil.getImageUrl("nursing", files, currentPath, picturePath, picturePath_mapping, nursingPath, String.valueOf(ip_port));
+            urls = FileUtil.getImageUrl("nursing", files, currentPath, picturePath, picturePath_mapping, nursingPath, String.valueOf(ip_port), ip);
         } catch (IOException e) {
             log.error("图片创建失败, 原因：{}", e.getMessage());
             return ResultData.fail(ReturnCode.RC500.getCode(), "图片创建失败");
@@ -275,7 +278,7 @@ public class NursingController {
                     return ResultData.fail(ReturnCode.RC500.getCode(), "养老院图片删除失败");
                 }
 
-                ArrayList<String> urls = FileUtil.getImageUrl("nursing", files, currentPath, picturePath, picturePath_mapping, nursingPath, String.valueOf(ip_port));
+                ArrayList<String> urls = FileUtil.getImageUrl("nursing", files, currentPath, picturePath, picturePath_mapping, nursingPath, String.valueOf(ip_port), ip);
                 for (String url : urls) {
                     ImageEntity imageEntity = new ImageEntity();
                     imageEntity.setSrc(url);
