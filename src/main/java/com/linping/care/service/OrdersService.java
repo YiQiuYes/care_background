@@ -18,4 +18,6 @@ public interface OrdersService extends MPJBaseService<OrdersEntity> {
     boolean modifyStatusById(Integer id, Integer status);
 
     List<OrdersDTO> orderStatusList(Integer integer, Integer status);
+
+    boolean confirmReceive(Integer id, Integer userId);
 }

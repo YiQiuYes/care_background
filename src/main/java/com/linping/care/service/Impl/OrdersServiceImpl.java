@@ -165,4 +165,18 @@ public class OrdersServiceImpl extends MPJBaseServiceImpl<OrdersMapper, OrdersEn
 
         return list;
     }
+
+    @Override
+    public boolean confirmReceive(Integer id, Integer userId) {
+        OrdersEntity ordersEntity = ordersMapper.selectById(id);
+        if (ordersEntity == null) {
+            return false;
+        } else {
+            if (!ordersEntity.getUserId().equals(userId)) {
+                return false;
+            }
+            ordersEntity.setStatus(3);
+            return ordersMapper.updateById(ordersEntity) > 0;
+        }
+    }
 }

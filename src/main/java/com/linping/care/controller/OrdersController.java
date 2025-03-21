@@ -120,4 +120,19 @@ public class OrdersController {
         List<OrdersDTO> ordersDTOS = ordersService.orderStatusList(Integer.valueOf(userId), status);
         return ResultData.success(ordersDTOS);
     }
+
+    @Operation(summary = "确认收货")
+    @GetMapping("/orders/confirmReceive")
+    @Parameters({
+            @Parameter(name = "id", description = "订单id")
+    })
+    public ResultData<Object> confirmReceive(@RequestParam("id") Integer id, @RequestHeader("token") String token) {
+        String userId = JWTUtil.getId(token);
+        boolean isSuccess = ordersService.confirmReceive(id, Integer.valueOf(userId));
+        if (isSuccess) {
+            return ResultData.success("确认收货成功");
+        } else {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "确认收货失败");
+        }
+    }
 }
