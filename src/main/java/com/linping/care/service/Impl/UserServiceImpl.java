@@ -33,7 +33,8 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> 
         queryWrapper.eq("phone", phone);
 
         UserEntity userEntity = userMapper.selectOne(queryWrapper);
-        if (userEntity == null) {
+        String passwordMD5 = DigestUtils.md5DigestAsHex(password.getBytes());
+        if (userEntity == null || !userEntity.getPassword().equals(passwordMD5)) {
             throw new IllegalArgumentException("账号或密码错误");
         }
 
