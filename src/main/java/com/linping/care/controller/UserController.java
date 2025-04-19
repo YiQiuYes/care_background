@@ -1,6 +1,8 @@
 package com.linping.care.controller;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.github.yulichang.toolkit.JoinWrappers;
+import com.github.yulichang.wrapper.DeleteJoinWrapper;
 import com.linping.care.dto.AddressDTO;
 import com.linping.care.dto.UserDTO;
 import com.linping.care.dto.UserInfoDTO;
@@ -266,5 +268,28 @@ public class UserController {
         imageService.replaceIp(ip, String.valueOf(ip_port));
 
         return ResultData.success("替换成功");
+    }
+
+    @Operation(summary = "删除用户")
+    @GetMapping("/user/deleteUser")
+    public ResultData<String> deleteUser(@RequestHeader("token") String token, @RequestParam("deleteId") Integer deleteId) {
+        if (AuthUtil.isAuth(token, userService)) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
+        }
+
+        ImageEntity imageEntity = imageService.userImageById(deleteId);
+
+        DeleteJoinWrapper<ImageEntity> deleteJoinWrapper = JoinWrappers.delete(ImageEntity.class)
+                .deleteAll()
+                .leftJoin(UserEntity.class, UserEntity::getId, ImageEntity::getUserId)
+                .eq(ImageEntity::getUserId, deleteId);
+
+        boolean isDelete = imageService.deleteJoin(deleteJoinWrapper);
+        if (!isDelete) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "删除用户失败");
+        }
+
+        FileUtil.deleteImage(imageEntity.getSrc(), currentPath, picturePath, avatarPath);
+        return ResultData.success("删除成功");
     }
 }

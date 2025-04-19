@@ -22,4 +22,6 @@ public class UserInfoDTO {
     private String avatar;
     @Schema(name = "introduction",description = "个人介绍")
     private String introduction;
+    @Schema(name = "nursingRole",description = "养老院角色")
+    private Integer nursingRole;
 }

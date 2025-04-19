@@ -27,4 +27,6 @@ public class UserEntity {
     private Integer auth;
     @TableField("introduction")
     private String introduction;
+    @TableField("nursing_role")
+    private Integer nursingRole;
 }

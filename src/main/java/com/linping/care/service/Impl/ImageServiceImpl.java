@@ -50,6 +50,14 @@ public class ImageServiceImpl extends MPJBaseServiceImpl<ImageMapper, ImageEntit
     }
 
     @Override
+    public ImageEntity userImageById(Integer id) {
+        MPJLambdaQueryWrapper<ImageEntity> queryWrapper = new MPJLambdaQueryWrapper<>();
+        queryWrapper.selectAll(ImageEntity.class);
+        queryWrapper.eq(ImageEntity::getUserId, id);
+        return imageMapper.selectOne(queryWrapper);
+    }
+
+    @Override
     public void replaceIp(String ip, String port) {
         // 获取所有图片
         List<ImageEntity> imageEntities = imageMapper.selectList(null);

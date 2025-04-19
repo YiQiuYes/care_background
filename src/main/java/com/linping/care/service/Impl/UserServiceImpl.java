@@ -3,6 +3,8 @@ package com.linping.care.service.Impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.github.yulichang.base.MPJBaseServiceImpl;
+import com.github.yulichang.toolkit.JoinWrappers;
+import com.github.yulichang.wrapper.DeleteJoinWrapper;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.linping.care.dto.UserInfoDTO;
 import com.linping.care.entity.ImageEntity;
@@ -80,6 +82,7 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> 
             throw new IllegalArgumentException("手机号已存在");
         }
 
+        userEntity.setNursingRole(1);
         int insert = userMapper.insert(userEntity);
         if (insert == 0) {
             throw new IllegalArgumentException("注册失败");
