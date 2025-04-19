@@ -21,7 +21,7 @@ public class NursingBookingServiceImpl extends MPJBaseServiceImpl<NursingBooking
     private final NursingBookingMapper nursingBookingMapper;
 
     @Override
-    public HashMap<String, Object> getNursingBookingList(int pageNow, int pageSize) {
+    public HashMap<String, Object> getNursingBookingList(int pageNow, int pageSize, Integer ownNursingId) {
         MPJLambdaWrapper<NursingBookingEntity> wrapper = new MPJLambdaWrapper<>();
         wrapper.selectAll(NursingBookingEntity.class);
         wrapper.orderByAsc(NursingBookingEntity::getTime);
@@ -29,6 +29,9 @@ public class NursingBookingServiceImpl extends MPJBaseServiceImpl<NursingBooking
         wrapper.leftJoin(NursingEntity.class, NursingEntity::getId, NursingBookingEntity::getNursingId);
         wrapper.selectAs(NursingEntity::getName, NursingBookingDTO::getNursingName);
         wrapper.leftJoin(UserEntity.class, UserEntity::getId, NursingBookingEntity::getUserId);
+        if (ownNursingId != null) {
+            wrapper.eq(NursingBookingEntity::getNursingId, ownNursingId);
+        }
 
         HashMap<String, Object> result = new HashMap<>();
         Page<NursingBookingDTO> page = new Page<>(pageNow, pageSize);

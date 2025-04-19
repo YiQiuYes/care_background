@@ -77,9 +77,7 @@ public class UserController {
 
     @GetMapping("/user/refreshToken")
     @Operation(summary = "刷新refreshToken")
-    @Parameters({
-            @Parameter(name = "refreshToken", description = "刷新令牌", required = true)
-    })
+    @Parameters({@Parameter(name = "refreshToken", description = "刷新令牌", required = true)})
     public ResultData<HashMap<String, Object>> refreshToken(@RequestParam("refreshToken") String refreshToken) {
         try {
             String newRefreshToken = userService.refreshToken(refreshToken);
@@ -271,6 +269,7 @@ public class UserController {
     }
 
     @Operation(summary = "删除用户")
+    @Parameters({@Parameter(name = "deleteId", description = "需要删除的用户id", required = true)})
     @GetMapping("/user/deleteUser")
     public ResultData<String> deleteUser(@RequestHeader("token") String token, @RequestParam("deleteId") Integer deleteId) {
         if (AuthUtil.isAuth(token, userService)) {
@@ -279,10 +278,7 @@ public class UserController {
 
         ImageEntity imageEntity = imageService.userImageById(deleteId);
 
-        DeleteJoinWrapper<ImageEntity> deleteJoinWrapper = JoinWrappers.delete(ImageEntity.class)
-                .deleteAll()
-                .leftJoin(UserEntity.class, UserEntity::getId, ImageEntity::getUserId)
-                .eq(ImageEntity::getUserId, deleteId);
+        DeleteJoinWrapper<ImageEntity> deleteJoinWrapper = JoinWrappers.delete(ImageEntity.class).deleteAll().leftJoin(UserEntity.class, UserEntity::getId, ImageEntity::getUserId).eq(ImageEntity::getUserId, deleteId);
 
         boolean isDelete = imageService.deleteJoin(deleteJoinWrapper);
         if (!isDelete) {

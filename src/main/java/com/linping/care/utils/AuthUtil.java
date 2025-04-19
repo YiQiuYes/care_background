@@ -10,4 +10,15 @@ public class AuthUtil {
 
         return userEntity.getAuth() <= 1;
     }
+
+    public static boolean isNursingAuth(String token, UserService userService) {
+        String userId = JWTUtil.getId(token);
+        UserEntity userEntity = userService.getById(userId);
+
+        if (userEntity.getNursingRole() != null) {
+            return userEntity.getNursingRole() <= 1;
+        }
+
+        return true;
+    }
 }

@@ -64,13 +64,9 @@ public class NursingController {
     private final NursingBookingService nursingBookingService;
 
     @Operation(summary = "获取养老院信息列表")
-    @Parameters({
-            @Parameter(name = "pageNow", description = "当前页码", required = true),
-            @Parameter(name = "pageSize", description = "每页条数", required = true)
-    })
+    @Parameters({@Parameter(name = "pageNow", description = "当前页码", required = true), @Parameter(name = "pageSize", description = "每页条数", required = true)})
     @GetMapping("/nursing/list")
-    public ResultData<Object> nursingList(@RequestParam(value = "pageNow", defaultValue = "1") int pageNow,
-                                          @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
+    public ResultData<Object> nursingList(@RequestParam(value = "pageNow", defaultValue = "1") int pageNow, @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
         if (pageNow <= 0 || pageSize <= 0) {
             return ResultData.fail(400, "养老院获取信息列表api中页码或页数错误");
         }
@@ -102,20 +98,8 @@ public class NursingController {
 
     @Operation(summary = "插入养老院信息")
     @PostMapping("/nursing/insert")
-    @Parameter(name = "files", description = "文件", in = ParameterIn.DEFAULT,
-            schema = @Schema(name = "files", format = "binary"))
-    public ResultData<String> nursingInsert(@Schema(name = "name", description = "名称") @RequestParam("name") String name,
-                                            @Schema(name = "address", description = "地址") @RequestParam("address") String address,
-                                            @Schema(name = "phone", description = "电话") @RequestParam("phone") String phone,
-                                            @Schema(name = "content", description = "介绍") @RequestParam("content") String content,
-                                            @Schema(name = "time", description = "营业时间") @RequestParam("time") String time,
-                                            @Schema(name = "bunkCount", description = "床位数量") @RequestParam("bunkCount") Integer bunkCount,
-                                            @Schema(name = "workerCount", description = "职工数量") @RequestParam("workerCount") Integer workerCount,
-                                            @Schema(name = "size", description = "面积大小") @RequestParam("size") Long size,
-                                            @Schema(name = "aptitude", description = "资质等级") @RequestParam("aptitude") Integer aptitude,
-                                            @Schema(name = "location", description = "经纬度信息") @RequestParam("location") String location,
-                                            @RequestHeader("token") String token,
-                                            @RequestPart(name = "files", value = "files") MultipartFile[] files) {
+    @Parameter(name = "files", description = "文件", in = ParameterIn.DEFAULT, schema = @Schema(name = "files", format = "binary"))
+    public ResultData<String> nursingInsert(@Schema(name = "name", description = "名称") @RequestParam("name") String name, @Schema(name = "address", description = "地址") @RequestParam("address") String address, @Schema(name = "phone", description = "电话") @RequestParam("phone") String phone, @Schema(name = "content", description = "介绍") @RequestParam("content") String content, @Schema(name = "time", description = "营业时间") @RequestParam("time") String time, @Schema(name = "bunkCount", description = "床位数量") @RequestParam("bunkCount") Integer bunkCount, @Schema(name = "workerCount", description = "职工数量") @RequestParam("workerCount") Integer workerCount, @Schema(name = "size", description = "面积大小") @RequestParam("size") Long size, @Schema(name = "aptitude", description = "资质等级") @RequestParam("aptitude") Integer aptitude, @Schema(name = "location", description = "经纬度信息") @RequestParam("location") String location, @RequestHeader("token") String token, @RequestPart(name = "files", value = "files") MultipartFile[] files) {
         // 验证参数是否为空
         if (name == null || address == null || phone == null || content == null || time == null || bunkCount == null || workerCount == null || size == null || aptitude == null || location == null) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数不能为空");
@@ -170,9 +154,7 @@ public class NursingController {
     }
 
     @Operation(summary = "根据id获取养老院信息")
-    @Parameters({
-            @Parameter(name = "id", description = "养老院ID", required = true)
-    })
+    @Parameters({@Parameter(name = "id", description = "养老院ID", required = true)})
     @GetMapping("/nursing/getNursingById")
     public ResultData<NursingDTO> getNursingById(@RequestParam("id") Integer id) {
         if (id == null) {
@@ -223,19 +205,7 @@ public class NursingController {
 
     @Operation(summary = "更新养老院信息")
     @PostMapping("/nursing/update")
-    public ResultData<String> newsUpdate(@Schema(name = "id", description = "养老院id") @RequestParam("id") Integer id,
-                                         @Schema(name = "name", description = "名称") @RequestParam("name") String name,
-                                         @Schema(name = "address", description = "地址") @RequestParam("address") String address,
-                                         @Schema(name = "phone", description = "电话") @RequestParam("phone") String phone,
-                                         @Schema(name = "content", description = "介绍") @RequestParam("content") String content,
-                                         @Schema(name = "time", description = "营业时间") @RequestParam("time") String time,
-                                         @Schema(name = "bunkCount", description = "床位数量") @RequestParam("bunkCount") Integer bunkCount,
-                                         @Schema(name = "workerCount", description = "职工数量") @RequestParam("workerCount") Integer workerCount,
-                                         @Schema(name = "size", description = "面积大小") @RequestParam("size") Long size,
-                                         @Schema(name = "aptitude", description = "资质等级") @RequestParam("aptitude") Integer aptitude,
-                                         @Schema(name = "location", description = "经纬度信息") @RequestParam("location") String location,
-                                         @RequestHeader("token") String token,
-                                         @RequestPart(name = "files", value = "files", required = false) MultipartFile[] files) {
+    public ResultData<String> newsUpdate(@Schema(name = "id", description = "养老院id") @RequestParam("id") Integer id, @Schema(name = "name", description = "名称") @RequestParam("name") String name, @Schema(name = "address", description = "地址") @RequestParam("address") String address, @Schema(name = "phone", description = "电话") @RequestParam("phone") String phone, @Schema(name = "content", description = "介绍") @RequestParam("content") String content, @Schema(name = "time", description = "营业时间") @RequestParam("time") String time, @Schema(name = "bunkCount", description = "床位数量") @RequestParam("bunkCount") Integer bunkCount, @Schema(name = "workerCount", description = "职工数量") @RequestParam("workerCount") Integer workerCount, @Schema(name = "size", description = "面积大小") @RequestParam("size") Long size, @Schema(name = "aptitude", description = "资质等级") @RequestParam("aptitude") Integer aptitude, @Schema(name = "location", description = "经纬度信息") @RequestParam("location") String location, @RequestHeader("token") String token, @RequestPart(name = "files", value = "files", required = false) MultipartFile[] files) {
         // 校验参数是否为空
         if (!CheckParamUtil.nursingCheck(id, name, address, phone, content, time, bunkCount, workerCount, size, aptitude)) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
@@ -300,9 +270,7 @@ public class NursingController {
     }
 
     @Operation(summary = "删除养老院信息")
-    @Parameters({
-            @Parameter(name = "id", description = "养老院ID", required = true)
-    })
+    @Parameters({@Parameter(name = "id", description = "养老院ID", required = true)})
     @GetMapping("/nursing/delete")
     public ResultData<String> nursingDelete(@RequestParam("id") Integer id, @RequestHeader("token") String token) {
         if (id == null) {
@@ -324,10 +292,7 @@ public class NursingController {
         }
 
 
-        DeleteJoinWrapper<ImageEntity> deleteJoinWrapper = JoinWrappers.delete(ImageEntity.class)
-                .deleteAll()
-                .leftJoin(NursingEntity.class, NursingEntity::getId, ImageEntity::getNursingId)
-                .eq(ImageEntity::getNursingId, id);
+        DeleteJoinWrapper<ImageEntity> deleteJoinWrapper = JoinWrappers.delete(ImageEntity.class).deleteAll().leftJoin(NursingEntity.class, NursingEntity::getId, ImageEntity::getNursingId).eq(ImageEntity::getNursingId, id);
 
         boolean isDelete = imageService.deleteJoin(deleteJoinWrapper);
         if (!isDelete) {
@@ -341,10 +306,7 @@ public class NursingController {
     @PostMapping("/nursing/booking")
     public ResultData<String> nursingBooking(@RequestBody NursingBookingDTO nursingBookingDTO, @RequestHeader("token") String token) {
         // 校验参数是否为空
-        if (nursingBookingDTO == null || nursingBookingDTO.getNursingId() == null ||
-                nursingBookingDTO.getName() == null || nursingBookingDTO.getAddress() == null ||
-                nursingBookingDTO.getPhone() == null && nursingBookingDTO.getTime() == null ||
-                nursingBookingDTO.getContent() == null) {
+        if (nursingBookingDTO == null || nursingBookingDTO.getNursingId() == null || nursingBookingDTO.getName() == null || nursingBookingDTO.getAddress() == null || nursingBookingDTO.getPhone() == null && nursingBookingDTO.getTime() == null || nursingBookingDTO.getContent() == null) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
         }
 
@@ -372,27 +334,32 @@ public class NursingController {
     }
 
     @Operation(summary = "获取养老院预约信息列表")
-    @Parameters({
-            @Parameter(name = "pageNow", description = "当前页码", required = true),
-            @Parameter(name = "pageSize", description = "每页条数", required = true)
-    })
+    @Parameters({@Parameter(name = "pageNow", description = "当前页码", required = true), @Parameter(name = "pageSize", description = "每页条数", required = true)})
     @GetMapping("/nursing/bookingList")
     public ResultData<Object> nursingBookingList(@RequestParam(value = "pageNow", defaultValue = "1") int pageNow,
-                                                 @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
+                                                 @RequestParam(value = "pageSize", defaultValue = "30") int pageSize,
+                                                 @RequestHeader("token") String token) {
         if (pageNow <= 0 || pageSize <= 0) {
             return ResultData.fail(400, "获取养老院预约信息列表api中页码或页数错误");
         }
 
+        // 验证权限
+        if (AuthUtil.isAuth(token, userService) && AuthUtil.isNursingAuth(token, userService)) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "无权限");
+        }
 
-        HashMap<String, Object> list = nursingBookingService.getNursingBookingList(pageNow, pageSize);
+        String userId = JWTUtil.getId(token);
+        if (userId == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户未登录");
+        }
+        UserEntity userEntity = userService.getById(Integer.parseInt(userId));
+
+        HashMap<String, Object> list = nursingBookingService.getNursingBookingList(pageNow, pageSize, userEntity.getOwnNursingId());
         return ResultData.success(list);
     }
 
     @Operation(summary = "更新养老院预约信息")
-    @Parameters({
-            @Parameter(name = "id", description = "预约ID", required = true),
-            @Parameter(name = "status", description = "预约状态", required = true)
-    })
+    @Parameters({@Parameter(name = "id", description = "预约ID", required = true), @Parameter(name = "status", description = "预约状态", required = true)})
     @GetMapping("/nursing/updateBooking")
     public ResultData<String> updateBooking(@RequestParam("id") Integer id, @RequestParam("status") Integer status, @RequestHeader("token") String token) {
         if (id == null || status == null) {
@@ -400,7 +367,7 @@ public class NursingController {
         }
 
         // 验证权限
-        if (AuthUtil.isAuth(token, userService)) {
+        if (AuthUtil.isAuth(token, userService) && AuthUtil.isNursingAuth(token, userService)) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
         }
 
@@ -413,9 +380,7 @@ public class NursingController {
     }
 
     @Operation(summary = "删除养老院预约信息")
-    @Parameters({
-            @Parameter(name = "id", description = "预约ID", required = true)
-    })
+    @Parameters({@Parameter(name = "id", description = "预约ID", required = true)})
     @GetMapping("/nursing/deleteBooking")
     public ResultData<String> deleteBooking(@RequestParam("id") Integer id, @RequestHeader("token") String token) {
         if (id == null) {
@@ -423,7 +388,7 @@ public class NursingController {
         }
 
         // 验证权限
-        if (AuthUtil.isAuth(token, userService)) {
+        if (AuthUtil.isAuth(token, userService) && AuthUtil.isNursingAuth(token, userService)) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数错误");
         }
 

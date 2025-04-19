@@ -12,7 +12,7 @@ public interface NursingBookingService extends MPJBaseService<NursingBookingEnti
      * @param pageSize 每页显示数量
      * @return HashMap<String, Object>
      */
-    HashMap<String, Object> getNursingBookingList(int pageNow, int pageSize);
+    HashMap<String, Object> getNursingBookingList(int pageNow, int pageSize, Integer ownNursingId);
 
     boolean updateNursingBooking(Integer id, Integer status);
 }
