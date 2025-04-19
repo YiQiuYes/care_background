@@ -48,4 +48,22 @@ public class ImageServiceImpl extends MPJBaseServiceImpl<ImageMapper, ImageEntit
         queryWrapper.eq(ImageEntity::getNewsId, id);
         return imageMapper.selectList(queryWrapper);
     }
+
+    @Override
+    public void replaceIp(String ip, String port) {
+        // 获取所有图片
+        List<ImageEntity> imageEntities = imageMapper.selectList(null);
+        // 正则匹配url中的ip部分
+        String reg = "((2[0-4]\\d|25[0-5]|[01]?\\d\\d?)\\.){3}(2[0-4]\\d|25[0-5]|[01]?\\d\\d?)(:\\d{1,5})?";
+        for (ImageEntity imageEntity : imageEntities) {
+            String url = imageEntity.getSrc();
+            if (url != null) {
+                String endStr = url.replaceAll(reg, ip + ":" + port);
+                // 更新图片url
+                imageEntity.setSrc(endStr);
+            }
+        }
+        // 批量更新图片
+        imageMapper.updateById(imageEntities);
+    }
 }

@@ -8,6 +8,7 @@ import com.linping.care.entity.*;
 import com.linping.care.service.AddressService;
 import com.linping.care.service.ImageService;
 import com.linping.care.service.UserService;
+import com.linping.care.utils.AuthUtil;
 import com.linping.care.utils.FileUtil;
 import com.linping.care.utils.JWTUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -253,5 +254,17 @@ public class UserController {
             return ResultData.fail(ReturnCode.RC500.getCode(), "地址不存在");
         }
         return ResultData.success(addressEntity);
+    }
+
+    @Operation(summary = "替换图片ip地址")
+    @GetMapping("/user/replaceIp")
+    public ResultData<String> replaceIp(@RequestHeader("token") String token) {
+        if (AuthUtil.isAuth(token, userService)) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
+        }
+
+        imageService.replaceIp(ip, String.valueOf(ip_port));
+
+        return ResultData.success("替换成功");
     }
 }

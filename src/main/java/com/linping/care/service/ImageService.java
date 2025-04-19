@@ -13,4 +13,6 @@ public interface ImageService extends MPJBaseService<ImageEntity> {
     List<ImageEntity> NursingImagesById(Integer id);
 
     List<ImageEntity> NewsImagesById(Integer id);
+
+    void replaceIp(String ip, String port);
 }
