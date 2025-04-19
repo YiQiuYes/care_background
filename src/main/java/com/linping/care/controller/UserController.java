@@ -109,7 +109,7 @@ public class UserController {
         }
 
         UserEntity userEntity = new UserEntity();
-        userEntity.setUsername("用户" + phone.substring(0, 3) + "***" + phone.substring(phone.length() - 5, phone.length() - 1));
+        userEntity.setUsername("用户" + phone.substring(0, 3) + "***" + phone.substring(phone.length() - 4));
         userEntity.setPhone(userDTO.getPhone());
         userEntity.setPassword(userDTO.getPassword());
         userEntity.setAuth(1);
