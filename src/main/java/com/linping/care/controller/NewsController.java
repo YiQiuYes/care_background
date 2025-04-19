@@ -67,7 +67,7 @@ public class NewsController {
                                        @RequestParam(value = "pageNow", defaultValue = "1") int pageNow,
                                        @RequestParam(value = "pageSize", defaultValue = "30") int pageSize) {
         if (pageNow <= 0 || pageSize <= 0) {
-            return ResultData.fail(400, "页码或页数错误");
+            return ResultData.fail(ReturnCode.RC500.getCode(), "页码或页数错误");
         }
         HashMap<String, Object> newsList = newsService.getNewsList(type, pageNow, pageSize);
         if (newsList == null) {

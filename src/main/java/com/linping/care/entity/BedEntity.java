@@ -8,23 +8,29 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
-@TableName("image")
+@TableName("bed")
 @AllArgsConstructor
 @NoArgsConstructor
-public class ImageEntity {
+public class BedEntity {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
-    @TableField(value = "src")
-    private String src;
-    @TableField(value = "news_id")
-    private Integer newsId;
-    @TableField(value = "user_id")
-    private Integer userId;
     @TableField(value = "nursing_id")
     private Integer nursingId;
-    @TableField(value = "goods_id")
-    private Integer goodsId;
-    @TableField(value = "bed_id")
-    private Integer bedId;
+    @TableField(value = "size")
+    private Integer size;
+    @TableField(value = "address")
+    private String address;
+    @TableField(value = "status")
+    private Integer status;
+    @TableField(value = "meta")
+    private String meta;
+    @TableField(value = "price")
+    private BigDecimal price;
+    @TableField(value = "description")
+    private String description;
+    @TableField(value = "aptitude")
+    private Integer aptitude;
 }

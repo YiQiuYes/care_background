@@ -151,3 +151,11 @@ create table if not exists care.orders
     constraint fk_order_user_id
         foreign key (user_id) references care.user (id)
 );
+
+create table if not exists care.bed
+(
+    id         int auto_increment primary key,
+    nursing_id int not null,
+    constraint fk_bed_nursing_id
+        foreign key (nursing_id) references care.nursing (id)
+);

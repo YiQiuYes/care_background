@@ -99,7 +99,19 @@ public class NursingController {
     @Operation(summary = "插入养老院信息")
     @PostMapping("/nursing/insert")
     @Parameter(name = "files", description = "文件", in = ParameterIn.DEFAULT, schema = @Schema(name = "files", format = "binary"))
-    public ResultData<String> nursingInsert(@Schema(name = "name", description = "名称") @RequestParam("name") String name, @Schema(name = "address", description = "地址") @RequestParam("address") String address, @Schema(name = "phone", description = "电话") @RequestParam("phone") String phone, @Schema(name = "content", description = "介绍") @RequestParam("content") String content, @Schema(name = "time", description = "营业时间") @RequestParam("time") String time, @Schema(name = "bunkCount", description = "床位数量") @RequestParam("bunkCount") Integer bunkCount, @Schema(name = "workerCount", description = "职工数量") @RequestParam("workerCount") Integer workerCount, @Schema(name = "size", description = "面积大小") @RequestParam("size") Long size, @Schema(name = "aptitude", description = "资质等级") @RequestParam("aptitude") Integer aptitude, @Schema(name = "location", description = "经纬度信息") @RequestParam("location") String location, @RequestHeader("token") String token, @RequestPart(name = "files", value = "files") MultipartFile[] files) {
+    public ResultData<String> nursingInsert(
+            @Schema(name = "name", description = "名称") @RequestParam("name") String name,
+            @Schema(name = "address", description = "地址") @RequestParam("address") String address,
+            @Schema(name = "phone", description = "电话") @RequestParam("phone") String phone,
+            @Schema(name = "content", description = "介绍") @RequestParam("content") String content,
+            @Schema(name = "time", description = "营业时间") @RequestParam("time") String time,
+            @Schema(name = "bunkCount", description = "床位数量") @RequestParam("bunkCount") Integer bunkCount,
+            @Schema(name = "workerCount", description = "职工数量") @RequestParam("workerCount") Integer workerCount,
+            @Schema(name = "size", description = "面积大小") @RequestParam("size") Long size,
+            @Schema(name = "aptitude", description = "资质等级") @RequestParam("aptitude") Integer aptitude,
+            @Schema(name = "location", description = "经纬度信息") @RequestParam("location") String location,
+            @RequestHeader("token") String token,
+            @RequestPart(name = "files", value = "files") MultipartFile[] files) {
         // 验证参数是否为空
         if (name == null || address == null || phone == null || content == null || time == null || bunkCount == null || workerCount == null || size == null || aptitude == null || location == null) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "参数不能为空");
@@ -336,9 +348,7 @@ public class NursingController {
     @Operation(summary = "获取养老院预约信息列表")
     @Parameters({@Parameter(name = "pageNow", description = "当前页码", required = true), @Parameter(name = "pageSize", description = "每页条数", required = true)})
     @GetMapping("/nursing/bookingList")
-    public ResultData<Object> nursingBookingList(@RequestParam(value = "pageNow", defaultValue = "1") int pageNow,
-                                                 @RequestParam(value = "pageSize", defaultValue = "30") int pageSize,
-                                                 @RequestHeader("token") String token) {
+    public ResultData<Object> nursingBookingList(@RequestParam(value = "pageNow", defaultValue = "1") int pageNow, @RequestParam(value = "pageSize", defaultValue = "30") int pageSize, @RequestHeader("token") String token) {
         if (pageNow <= 0 || pageSize <= 0) {
             return ResultData.fail(400, "获取养老院预约信息列表api中页码或页数错误");
         }
@@ -398,5 +408,23 @@ public class NursingController {
         }
 
         return ResultData.success("删除预约信息成功");
+    }
+
+    @Operation(summary = "查询养老院预约信息")
+    @GetMapping("/nursing/getBookingById")
+    public ResultData<Object> getBookingById(@RequestHeader("token") String token) {
+        String userId = JWTUtil.getId(token);
+        if (userId == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户未登录");
+        }
+        UserEntity userEntity = userService.getById(Integer.parseInt(userId));
+
+        MPJLambdaQueryWrapper<NursingBookingEntity> queryWrapper = new MPJLambdaQueryWrapper<>();
+        queryWrapper.selectAll(NursingBookingEntity.class);
+        queryWrapper.orderByDesc(NursingBookingEntity::getTime);
+        queryWrapper.eq(NursingBookingEntity::getUserId, userEntity.getId());
+        List<NursingBookingEntity> list = nursingBookingService.list(queryWrapper);
+
+        return ResultData.success(list);
     }
 }
