@@ -159,3 +159,15 @@ create table if not exists care.bed
     constraint fk_bed_nursing_id
         foreign key (nursing_id) references care.nursing (id)
 );
+
+create table if not exists care.employee
+(
+    id          int auto_increment primary key,
+    name        varchar(50)  null,
+    phone       varchar(20)  null,
+    meta        varchar(200) null,
+    description text         null,
+    user_id     int          null,
+    constraint fk_employee_user_id
+        foreign key (user_id) references care.user (id)
+);

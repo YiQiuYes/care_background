@@ -19,4 +19,6 @@ public interface ImageService extends MPJBaseService<ImageEntity> {
     void replaceIp(String ip, String port);
 
     ImageEntity getByBedId(Integer id);
+
+    ImageEntity getByEmployeeId(Integer id);
 }

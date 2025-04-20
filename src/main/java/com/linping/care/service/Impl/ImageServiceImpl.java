@@ -82,4 +82,12 @@ public class ImageServiceImpl extends MPJBaseServiceImpl<ImageMapper, ImageEntit
         queryWrapper.eq(ImageEntity::getBedId, id);
         return imageMapper.selectOne(queryWrapper);
     }
+
+    @Override
+    public ImageEntity getByEmployeeId(Integer id) {
+        MPJLambdaQueryWrapper<ImageEntity> queryWrapper = new MPJLambdaQueryWrapper<>();
+        queryWrapper.selectAll(ImageEntity.class);
+        queryWrapper.eq(ImageEntity::getEmployeeId, id);
+        return imageMapper.selectOne(queryWrapper);
+    }
 }
