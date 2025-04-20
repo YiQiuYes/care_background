@@ -33,4 +33,6 @@ public class BedEntity {
     private String description;
     @TableField(value = "aptitude")
     private Integer aptitude;
+    @TableField(value = "own_id")
+    private Integer ownId;
 }

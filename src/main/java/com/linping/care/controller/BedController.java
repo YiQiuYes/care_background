@@ -1,5 +1,6 @@
 package com.linping.care.controller;
 
+import com.linping.care.dto.BedDTO;
 import com.linping.care.entity.*;
 import com.linping.care.service.BedService;
 import com.linping.care.service.ImageService;
@@ -22,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 
 @Tag(name = "床位控制类")
 @RestController
@@ -246,5 +248,75 @@ public class BedController {
         }
 
         return ResultData.success(bedList);
+    }
+
+    @Operation(summary = "床位预定")
+    @Parameters({
+            @Parameter(name = "bedId", description = "床位id", required = true),
+    })
+    @GetMapping("/bed/booking")
+    public ResultData<String> bedBooking(
+            @Parameter(name = "bedId", description = "床位id") @RequestParam("bedId") Integer bedId,
+            @RequestHeader("token") String token) {
+        // 验证参数是否为空
+        if (bedId == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "参数不能为空");
+        }
+
+        String userId = JWTUtil.getId(token);
+        UserEntity userEntity = userService.getById(userId);
+
+        // 查看是否已经预定床位
+        boolean isTrue = bedService.isAlreadyBooking(userEntity.getId());
+        if (isTrue) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "已预定床位");
+        }
+
+        BedEntity bedEntity = bedService.getById(bedId);
+        if (bedEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "床位不存在");
+        }
+
+        if (bedEntity.getStatus() != 0) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "床位已被预定");
+        }
+
+        bedEntity.setStatus(1);
+        bedEntity.setOwnId(userEntity.getId());
+        boolean update = bedService.updateById(bedEntity);
+        if (!update) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "预定失败");
+        }
+        return ResultData.success("预定成功");
+    }
+
+    @Operation(summary = "查询预定的床位信息")
+    @GetMapping("/bed/bookingBedInfo")
+    public ResultData<Object> bookingBedInfo(@RequestHeader("token") String token) {
+        String userId = JWTUtil.getId(token);
+        UserEntity userEntity = userService.getById(userId);
+        if (userEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户不存在");
+        }
+
+        List<BedDTO> bedDTOs = bedService.getBedByUserId(userEntity.getId());
+        return ResultData.success(bedDTOs);
+    }
+
+    @Operation(summary = "取消预定床位")
+    @GetMapping("/bed/cancelBooking")
+    public ResultData<String> cancelBooking(@RequestHeader("token") String token) {
+        String userId = JWTUtil.getId(token);
+        UserEntity userEntity = userService.getById(userId);
+        if (userEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户不存在");
+        }
+
+        boolean isSuccess = bedService.cancelBookingBedByOwnId(userEntity.getId());
+        if (!isSuccess) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "取消预定失败");
+        }
+
+        return ResultData.success("取消预定成功");
     }
 }

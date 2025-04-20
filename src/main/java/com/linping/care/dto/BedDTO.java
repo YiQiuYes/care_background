@@ -32,4 +32,6 @@ public class BedDTO {
     private Integer aptitude;
     @Schema(name = "imageSrc", description = "图片地址")
     private String imageSrc;
+    @Schema(name = "ownId", description = "床位预定者")
+    private Integer ownId;
 }

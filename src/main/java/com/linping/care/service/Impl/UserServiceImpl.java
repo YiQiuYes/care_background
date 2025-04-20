@@ -3,8 +3,6 @@ package com.linping.care.service.Impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.github.yulichang.base.MPJBaseServiceImpl;
-import com.github.yulichang.toolkit.JoinWrappers;
-import com.github.yulichang.wrapper.DeleteJoinWrapper;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import com.linping.care.dto.UserInfoDTO;
 import com.linping.care.entity.ImageEntity;
