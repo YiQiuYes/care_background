@@ -167,7 +167,14 @@ create table if not exists care.employee
     phone       varchar(20)  null,
     meta        varchar(200) null,
     description text         null,
-    user_id     int          null,
-    constraint fk_employee_user_id
-        foreign key (user_id) references care.user (id)
+    user_id     int          null
+);
+
+create table if not exists care.medicine
+(
+    id         int auto_increment primary key,
+    name       varchar(100) null,
+    dosage     varchar(100) null,
+    start_time datetime     null,
+    end_time   datetime     null
 );
