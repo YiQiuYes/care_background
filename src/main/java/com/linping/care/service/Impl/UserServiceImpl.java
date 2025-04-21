@@ -2,9 +2,12 @@ package com.linping.care.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import com.linping.care.dto.BedDTO;
 import com.linping.care.dto.UserInfoDTO;
+import com.linping.care.entity.BedEntity;
 import com.linping.care.entity.ImageEntity;
 import com.linping.care.entity.UserEntity;
 import com.linping.care.mapper.UserMapper;
@@ -14,7 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -123,6 +128,34 @@ public class UserServiceImpl extends MPJBaseServiceImpl<UserMapper, UserEntity> 
         userInfoDTO.setPassword("");
         userInfoDTO.setRefreshToken("");
         userInfoDTO.setPhone("");
+        return userInfoDTO;
+    }
+
+    @Override
+    public HashMap<String, Object> getUserList(Integer pageNow, Integer pageSize, Integer ownNursingId) {
+        MPJLambdaWrapper<UserEntity> queryWrapper = new MPJLambdaWrapper<>();
+        queryWrapper.selectAll(UserEntity.class);
+        queryWrapper.selectAs(ImageEntity::getSrc, UserInfoDTO::getAvatar);
+
+        queryWrapper.leftJoin(ImageEntity.class, ImageEntity::getUserId, UserEntity::getId);
+        if (ownNursingId != null) {
+            queryWrapper.eq(UserEntity::getOwnNursingId, ownNursingId);
+        }
+        HashMap<String, Object> result = new HashMap<>();
+        Page<UserInfoDTO> page = new Page<>(pageNow, pageSize);
+        page = userMapper.selectJoinPage(page, UserInfoDTO.class, queryWrapper);
+        List<UserInfoDTO> records = page.getRecords();
+        result.put("pages", page.getPages());
+        result.put("total", page.getTotal());
+        result.put("records", records);
+        return result;
+    }
+
+    @Override
+    public UserInfoDTO getUserByPhone(String phone) {
+        MPJLambdaWrapper<UserEntity> queryWrapper = new MPJLambdaWrapper<>();
+        queryWrapper.eq("phone", phone);
+        UserInfoDTO userInfoDTO = userMapper.selectJoinOne(UserInfoDTO.class, queryWrapper);
         return userInfoDTO;
     }
 }

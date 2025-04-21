@@ -9,6 +9,7 @@ import com.linping.care.dto.UserInfoDTO;
 import com.linping.care.entity.*;
 import com.linping.care.service.AddressService;
 import com.linping.care.service.ImageService;
+import com.linping.care.service.NursingService;
 import com.linping.care.service.UserService;
 import com.linping.care.utils.AuthUtil;
 import com.linping.care.utils.FileUtil;
@@ -56,6 +57,8 @@ public class UserController {
     private final ImageService imageService;
 
     private final AddressService addressService;
+
+    private final NursingService nursingService;
 
     @PostMapping("/user/login")
     @Operation(summary = "用户登录")
@@ -287,5 +290,103 @@ public class UserController {
 
         FileUtil.deleteImage(imageEntity.getSrc(), currentPath, picturePath, avatarPath);
         return ResultData.success("删除成功");
+    }
+
+    @Operation(summary = "设置养老院管理员")
+    @GetMapping("/user/setNursingAdmin")
+    @Parameters({
+            @Parameter(name = "userId", description = "养老院管理员id", required = true),
+            @Parameter(name = "nursingId", description = "养老院id", required = true),
+            @Parameter(name = "role", description = "权限等级", required = true)
+
+    })
+    public ResultData<String> setNursingAdmin(@RequestParam(value = "userId") Integer userId,
+                                              @RequestParam(value = "nursingId") Integer nursingId,
+                                              @RequestParam(value = "role") Integer role,
+                                              @RequestHeader("token") String token) {
+        if (AuthUtil.isAuth(token, userService) && AuthUtil.isNursingAuth(token, userService)) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
+        }
+
+        UserEntity userEntity = userService.getById(userId);
+        if (userEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户不存在");
+        }
+
+        NursingEntity nursingEntity = nursingService.getById(nursingId);
+        if (nursingEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "养老院不存在");
+        }
+
+        if (role <= 0) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "权限等级不合法");
+        }
+
+        userEntity.setNursingRole(role);
+        userEntity.setOwnNursingId(nursingId);
+        if (role == 1) {
+            userEntity.setOwnNursingId(null);
+        }
+        boolean update = userService.updateById(userEntity);
+        if (!update) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "添加养老院管理员失败");
+        }
+
+        return ResultData.success("添加成功");
+    }
+
+    @Operation(summary = "获取管理员用户列表")
+    @GetMapping("/user/userList")
+    @Parameters({
+            @Parameter(name = "pageNow", description = "当前页码", required = true),
+            @Parameter(name = "pageSize", description = "每页条数", required = true)
+    })
+    public ResultData<Object> userList(@RequestHeader("token") String token,
+                                       @RequestParam(value = "pageNow") Integer pageNow,
+                                       @RequestParam(value = "pageSize") Integer pageSize) {
+        if (AuthUtil.isAuth(token, userService) && AuthUtil.isNursingAuth(token, userService)) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
+        }
+
+        if (pageNow <= 0 || pageSize <= 0) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "页码或页数错误");
+        }
+
+        // 获取用户entity
+        String userId = JWTUtil.getId(token);
+        UserEntity userEntity = userService.getById(userId);
+        if (userEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户不存在");
+        }
+
+        HashMap<String, Object> bedList = userService.getUserList(pageNow, pageSize, userEntity.getOwnNursingId());
+        if (bedList == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "获取床位信息列表失败");
+        }
+
+        return ResultData.success(bedList);
+    }
+
+    @Operation(summary = "根据手机号获取用户信息")
+    @GetMapping("/user/getUserByPhone")
+    @Parameters({
+            @Parameter(name = "phone", description = "手机号", required = true)
+    })
+    public ResultData<Object> getUserByPhone(@RequestParam(value = "phone") String phone,
+                                             @RequestHeader("token") String token) {
+        if (phone.isEmpty()) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "手机号不能为空");
+        }
+
+        if (AuthUtil.isAuth(token, userService) && AuthUtil.isNursingAuth(token, userService)) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
+        }
+
+        UserInfoDTO userInfoDTO = userService.getUserByPhone(phone);
+        if (userInfoDTO == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户不存在");
+        }
+
+        return ResultData.success(userInfoDTO);
     }
 }
