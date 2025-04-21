@@ -138,7 +138,7 @@ public class EmployeeController {
             @Schema(name = "jobNumber", description = "员工号") @RequestParam(value = "jobNumber") BigInteger jobNumber,
             @Schema(name = "nursingId", description = "养老院ID") @RequestParam(value = "nursingId") Integer nursingId,
             @RequestHeader("token") String token,
-            @RequestPart(name = "file", value = "file") MultipartFile file) {
+            @RequestPart(name = "file", value = "file", required = false) MultipartFile file) {
         if (AuthUtil.isAuth(token, userService) && AuthUtil.isNursingAuth(token, userService)) {
             return ResultData.fail(ReturnCode.RC500.getCode(), "权限不足");
         }

@@ -179,8 +179,9 @@ public class BedController {
         bedEntity.setNursingId(nursingId);
         bedEntity.setSize(size);
         bedEntity.setAddress(address);
-        if (status != null) {
+        if (status != null && status == 0) {
             bedEntity.setStatus(status);
+            bedEntity.setOwnId(null);
         }
         bedEntity.setMeta(meta);
         bedEntity.setPrice(BigDecimal.valueOf(price));
