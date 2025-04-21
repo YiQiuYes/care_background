@@ -46,6 +46,8 @@ pictureFile:
   avatar-path: "/avatar"
   nursing-path: "/nursing"
   goods-path: "/goods"
+  bed-path: "/bed"
+  employee-path: "/employee"
 map:
   key: "e5a05938fdbb575dd2a70b03f490aa1d"
 ip: "134.175.119.27"
