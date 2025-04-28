@@ -261,4 +261,21 @@ public class EmployeeController {
 
         return ResultData.success("取消预定成功");
     }
+
+    @Operation(summary = "获取个人预定的人员列表")
+    @GetMapping("/employee/getPersonBookingList")
+    public ResultData<Object> getPersonBookingList(@RequestHeader("token") String token) {
+        String userId = JWTUtil.getId(token);
+        UserEntity userEntity = userService.getById(userId);
+        if (userEntity == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "用户不存在");
+        }
+
+        HashMap<String, Object> personBookingList = employeeService.getPersonBookingList(userEntity.getId());
+        if (personBookingList == null) {
+            return ResultData.fail(ReturnCode.RC500.getCode(), "获取预定人员列表失败");
+        }
+
+        return ResultData.success(personBookingList);
+    }
 }

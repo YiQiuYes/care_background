@@ -9,4 +9,6 @@ public interface EmployeeService extends MPJBaseService<EmployeeEntity> {
     HashMap<String, Object> getEmployeeList(int pageNow, int pageSize, Integer ownNursingId);
 
     boolean cancelBookingEmployeeByUserId(Integer userId);
+
+    HashMap<String, Object> getPersonBookingList(Integer id);
 }

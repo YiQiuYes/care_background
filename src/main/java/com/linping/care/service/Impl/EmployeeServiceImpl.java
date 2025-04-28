@@ -51,4 +51,19 @@ public class EmployeeServiceImpl extends MPJBaseServiceImpl<EmployeeMapper, Empl
         update.eq(EmployeeEntity::getUserId, userId);
         return employeeMapper.update(update) > 0;
     }
+
+    @Override
+    public HashMap<String, Object> getPersonBookingList(Integer id) {
+        HashMap<String, Object> result = new HashMap<>();
+        MPJLambdaWrapper<EmployeeEntity> queryWrapper = new MPJLambdaWrapper<>();
+        queryWrapper.selectAll(EmployeeEntity.class);
+        queryWrapper.selectAs(ImageEntity::getSrc, EmployeeDTO::getImage);
+        queryWrapper.leftJoin(ImageEntity.class, ImageEntity::getEmployeeId, EmployeeEntity::getId);
+        queryWrapper.eq(EmployeeEntity::getUserId, id);
+
+        List<EmployeeDTO> dtoList = employeeMapper.selectJoinList(EmployeeDTO.class, queryWrapper);
+        result.put("records", dtoList);
+        result.put("total", dtoList.size());
+        return result;
+    }
 }

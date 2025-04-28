@@ -1,7 +1,4 @@
--- 新建数据库care
-create database if not exists care;
-
-create table if not exists care.goods
+create table goods
 (
     id          int auto_increment
         primary key,
@@ -13,7 +10,7 @@ create table if not exists care.goods
     create_time timestamp      default CURRENT_TIMESTAMP null
 );
 
-create table if not exists care.news
+create table news
 (
     id          int auto_increment
         primary key,
@@ -24,7 +21,7 @@ create table if not exists care.news
     create_time timestamp   default CURRENT_TIMESTAMP null
 );
 
-create table if not exists care.nursing
+create table nursing
 (
     id           int auto_increment
         primary key,
@@ -40,19 +37,21 @@ create table if not exists care.nursing
     location     varchar(100) null
 );
 
-create table if not exists care.user
+create table user
 (
-    id            int auto_increment
+    id             int auto_increment
         primary key,
-    username      varchar(50)   not null,
-    password      varchar(50)   not null,
-    phone         varchar(20)   not null,
-    refresh_token text          null,
-    auth          int default 1 not null,
-    introduction  text          null
+    username       varchar(50)   not null,
+    password       varchar(50)   not null,
+    phone          varchar(20)   not null,
+    refresh_token  text          null,
+    auth           int default 1 not null,
+    introduction   text          null,
+    nursing_role   int default 1 null comment '养老院中的角色',
+    own_nursing_id int           null
 );
 
-create table if not exists care.address
+create table address
 (
     id         int auto_increment
         primary key,
@@ -65,10 +64,29 @@ create table if not exists care.address
     detail     varchar(200)         not null,
     is_default tinyint(1) default 0 null,
     constraint fk_address_user_id
-        foreign key (user_id) references care.user (id)
+        foreign key (user_id) references user (id)
 );
 
-create table if not exists care.cart
+create table bed
+(
+    id          int auto_increment
+        primary key,
+    nursing_id  int            not null,
+    size        int            null,
+    address     varchar(200)   null,
+    status      int default 0  null,
+    meta        varchar(200)   null,
+    price       decimal(10, 2) null,
+    description text           null,
+    aptitude    int default 1  null,
+    own_id      int            null,
+    constraint bed_own_id_user_id
+        foreign key (own_id) references user (id),
+    constraint fk_bed_nursing_id
+        foreign key (nursing_id) references nursing (id)
+);
+
+create table cart
 (
     id       int auto_increment
         primary key,
@@ -76,12 +94,12 @@ create table if not exists care.cart
     goods_id int not null,
     count    int null,
     constraint fk_care_goods_id
-        foreign key (goods_id) references care.goods (id),
+        foreign key (goods_id) references goods (id),
     constraint fk_care_user_id
-        foreign key (user_id) references care.user (id)
+        foreign key (user_id) references user (id)
 );
 
-create table if not exists care.comment
+create table comment
 (
     id          int auto_increment
         primary key,
@@ -91,31 +109,68 @@ create table if not exists care.comment
     create_time timestamp default CURRENT_TIMESTAMP null,
     grade       int       default 1                 null,
     constraint fk_comment_goods_id
-        foreign key (goods_id) references care.goods (id),
+        foreign key (goods_id) references goods (id),
     constraint fk_comment_user_id
-        foreign key (user_id) references care.user (id)
+        foreign key (user_id) references user (id)
 );
 
-create table if not exists care.image
+create table employee
 (
-    id         int auto_increment
+    id          int auto_increment
         primary key,
-    src        varchar(200) null,
-    news_id    int          null,
-    user_id    int          null,
-    nursing_id int          null,
-    goods_id   int          null,
-    constraint fk_goods_id
-        foreign key (goods_id) references care.goods (id),
-    constraint fk_news_id
-        foreign key (news_id) references care.news (id),
-    constraint fk_nursing_id
-        foreign key (nursing_id) references care.nursing (id),
-    constraint fk_user_id
-        foreign key (user_id) references care.user (id)
+    name        varchar(50)   null,
+    phone       varchar(20)   null,
+    meta        varchar(200)  null,
+    description text          null,
+    user_id     int           null,
+    status      int default 0 null,
+    job_number  bigint        null,
+    nursing_id  int           null,
+    constraint fk_employee_nursing_id
+        foreign key (nursing_id) references nursing (id),
+    constraint fk_employee_user_id
+        foreign key (user_id) references user (id)
 );
 
-create table if not exists care.nursing_booking
+create table image
+(
+    id          int auto_increment
+        primary key,
+    src         varchar(200) null,
+    news_id     int          null,
+    user_id     int          null,
+    nursing_id  int          null,
+    goods_id    int          null,
+    bed_id      int          null,
+    employee_id int          null,
+    constraint fk_goods_id
+        foreign key (goods_id) references goods (id),
+    constraint fk_image_bed_id
+        foreign key (bed_id) references bed (id),
+    constraint fk_image_employee_id
+        foreign key (employee_id) references employee (id),
+    constraint fk_news_id
+        foreign key (news_id) references news (id),
+    constraint fk_nursing_id
+        foreign key (nursing_id) references nursing (id),
+    constraint fk_user_id
+        foreign key (user_id) references user (id)
+);
+
+create table medicine
+(
+    id          int auto_increment
+        primary key,
+    name        varchar(100) null,
+    dosage      varchar(100) null,
+    start_time  datetime     null,
+    end_time    datetime     null,
+    employee_id int          null,
+    constraint fk_medicine_employee_id
+        foreign key (employee_id) references employee (id)
+);
+
+create table nursing_booking
 (
     id         int auto_increment
         primary key,
@@ -128,12 +183,12 @@ create table if not exists care.nursing_booking
     nursing_id int           null,
     status     int default 0 null,
     constraint nursing_booking_nursing_booking__fk
-        foreign key (user_id) references care.user (id),
+        foreign key (user_id) references user (id),
     constraint nursing_booking_nursing_booking__fk_2
-        foreign key (nursing_id) references care.nursing (id)
+        foreign key (nursing_id) references nursing (id)
 );
 
-create table if not exists care.orders
+create table orders
 (
     id          int auto_increment
         primary key,
@@ -147,34 +202,8 @@ create table if not exists care.orders
     order_id    varchar(50)                         null,
     count       int                                 null,
     constraint fk_order_goods_id
-        foreign key (goods_id) references care.goods (id),
+        foreign key (goods_id) references goods (id),
     constraint fk_order_user_id
-        foreign key (user_id) references care.user (id)
+        foreign key (user_id) references user (id)
 );
 
-create table if not exists care.bed
-(
-    id         int auto_increment primary key,
-    nursing_id int not null,
-    constraint fk_bed_nursing_id
-        foreign key (nursing_id) references care.nursing (id)
-);
-
-create table if not exists care.employee
-(
-    id          int auto_increment primary key,
-    name        varchar(50)  null,
-    phone       varchar(20)  null,
-    meta        varchar(200) null,
-    description text         null,
-    user_id     int          null
-);
-
-create table if not exists care.medicine
-(
-    id         int auto_increment primary key,
-    name       varchar(100) null,
-    dosage     varchar(100) null,
-    start_time datetime     null,
-    end_time   datetime     null
-);
